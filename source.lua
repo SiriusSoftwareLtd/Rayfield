@@ -1866,7 +1866,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 
 					local Success, Response = pcall(function()
-						DropdownSettings.Callback(DropdownSettings.CurrentOption)
+						if DropdownSettings.MultipleOptions then
+							DropdownSettings.Callback(DropdownSettings.CurrentOption)
+						else
+							DropdownSettings.Callback(DropdownSettings.CurrentOption[1]) -- if multiple options is off, only provide the string of the selected items instead of an unnecessary table
+						end
 					end)
 
 					if not Success then
