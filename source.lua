@@ -1709,17 +1709,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 			Dropdown.List.Visible = false
 			if DropdownSettings.CurrentOption then
-				if typeof(DropdownSettings.CurrentOption) == "string" then
+				if type(DropdownSettings.CurrentOption) == "string" then
 					DropdownSettings.CurrentOption = {DropdownSettings.CurrentOption}
 				end
-	
-				if not DropdownSettings.MultipleOptions then
+				if not DropdownSettings.MultipleOptions and type(DropdownSettings.CurrentOption) == "table" then
 					DropdownSettings.CurrentOption = {DropdownSettings.CurrentOption[1]}
 				end
 			else
-				DropdownSettings.CurrentOption = "None"
+				DropdownSettings.CurrentOption = {"None"}
 			end
-			
+
 			if DropdownSettings.MultipleOptions then
 				if DropdownSettings.CurrentOption and type(DropdownSettings.CurrentOption) == "table" then
 					if #DropdownSettings.CurrentOption == 1 then
