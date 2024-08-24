@@ -1718,12 +1718,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end
 
 			if DropdownSettings.MultipleOptions then
-				if #DropdownSettings.CurrentOption == 1 then
-					Dropdown.Selected.Text = DropdownSettings.CurrentOption[1]
-				elseif #DropdownSettings.CurrentOption == 0 then
-					Dropdown.Selected.Text = "None"
+				if DropdownSettings.CurrentOption then
+					if #DropdownSettings.CurrentOption == 1 then
+						Dropdown.Selected.Text = DropdownSettings.CurrentOption[1]
+					elseif #DropdownSettings.CurrentOption == 0 then
+						Dropdown.Selected.Text = "None"
+					else
+						Dropdown.Selected.Text = "Various"
+					end
 				else
-					Dropdown.Selected.Text = "Various"
+					Dropdown.Selected.Text = "None"
 				end
 			else
 				Dropdown.Selected.Text = DropdownSettings.CurrentOption[1]
