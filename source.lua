@@ -1718,7 +1718,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end
 
 			if DropdownSettings.MultipleOptions then
-				if DropdownSettings.CurrentOption then
+				if DropdownSettings.CurrentOption and type(DropdownSettings.CurrentOption) == "table" then
 					if #DropdownSettings.CurrentOption == 1 then
 						Dropdown.Selected.Text = DropdownSettings.CurrentOption[1]
 					elseif #DropdownSettings.CurrentOption == 0 then
@@ -1726,7 +1726,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 					else
 						Dropdown.Selected.Text = "Various"
 					end
-				else
+				else	
+					DropdownSettings.CurrentOption = {}
 					Dropdown.Selected.Text = "None"
 				end
 			else
