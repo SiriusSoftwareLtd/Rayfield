@@ -1718,7 +1718,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					DropdownSettings.CurrentOption = {DropdownSettings.CurrentOption[1]}
 				end
 			else
-				DropdownSettings.CurrentOption = {"None"}
+				DropdownSettings.CurrentOption = {}
 			end
 
 			if DropdownSettings.MultipleOptions then
