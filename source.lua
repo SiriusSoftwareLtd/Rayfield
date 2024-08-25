@@ -1733,7 +1733,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					Dropdown.Selected.Text = "None"
 				end
 			else
-				Dropdown.Selected.Text = DropdownSettings.CurrentOption[1]
+				Dropdown.Selected.Text = DropdownSettings.CurrentOption[1] or "None"
 			end
 
 
