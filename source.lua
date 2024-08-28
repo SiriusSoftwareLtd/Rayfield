@@ -1975,9 +1975,12 @@ function RayfieldLibrary:CreateWindow(Settings)
 				--SaveConfiguration()
 			end
 
-			function DropdownSettings:Refresh() -- updates every dropdown to new options from DropdownSettings.Options
+			function DropdownSettings:Refresh(optionsTable: table) -- updates a dropdown with new options from optionsTable
+				DropdownSettings.Options = optionsTable
 				for _, option in Dropdown.List:GetChildren() do
-					option:Destroy()
+					if option.ClassName == "Frame" and option.Name ~= "Placeholder" then
+						option:Destroy()
+					end
 				end
 				SetDropdownOptions()
 			end
@@ -2077,7 +2080,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 								else
 									KeybindSettings.Callback(true) -- maybe pcall this
 								end
-							end)	
+							end)
 						end
 					end
 				end
