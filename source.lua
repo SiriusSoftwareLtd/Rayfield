@@ -2449,6 +2449,7 @@ end
 
 function RayfieldLibrary:SetVisibility(visibility: boolean)
 	setVisibility(visibility, false)
+	return Hidden
 end
 
 function RayfieldLibrary:Destroy()
