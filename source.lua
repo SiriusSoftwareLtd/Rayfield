@@ -2439,7 +2439,6 @@ local function setVisibility(visibility: boolean, notify: boolean?)
 	if Debounce then return end
 	if visibility then
 		Hidden = false
-		Minimised = false
 		Unhide()
 	else
 		Hidden = true
