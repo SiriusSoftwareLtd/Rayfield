@@ -2450,7 +2450,7 @@ function RayfieldLibrary:SetVisibility(visibility: boolean)
 	setVisibility(visibility, false)
 end
 
-function RayfieldLibrary:GetVisibility(): boolean
+function RayfieldLibrary:IsVisible(): boolean
 	return not Hidden
 end
 
