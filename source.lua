@@ -518,7 +518,7 @@ function RayfieldLibrary:Notify(NotificationSettings)
 		Notification.Visible = true
 
 		local blurlight = nil
-		
+
 		if not useStudio then
 			if not getgenv().SecureMode then
 				blurlight = Instance.new("DepthOfFieldEffect",game:GetService("Lighting"))
@@ -560,7 +560,7 @@ function RayfieldLibrary:Notify(NotificationSettings)
 				end)
 			end
 		end
-		
+
 		Notification.BackgroundColor3 = SelectedTheme.Background
 		Notification.Title.Text = NotificationSettings.Title or "Unknown"
 		Notification.Title.TextTransparency = 1
@@ -669,8 +669,10 @@ function Hide(notify: boolean?)
 	if MPrompt then
 		MPrompt.Position = UDim2.new(0.5, 0, 0, -50)
 		MPrompt.Size = UDim2.new(0, 40, 0, 10)
+		MPrompt.BackgroundTransparency = 1
+		MPrompt.Title.TextTransparency = 1
+		MPrompt.Visible = true
 	end
-	
 
 	Debounce = true
 	if notify then
@@ -679,7 +681,7 @@ function Hide(notify: boolean?)
 		else
 			RayfieldLibrary:Notify({Title = "Interface Hidden", Content = "The interface has been hidden, you can unhide the interface by tapping K.", Duration = 7})
 		end
-		
+
 	end
 	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 470, 0, 0)}):Play()
 	TweenService:Create(Main.Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 470, 0, 45)}):Play()
@@ -754,8 +756,13 @@ function Unhide()
 	if MPrompt then
 		TweenService:Create(MPrompt, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 40, 0, 10), Position = UDim2.new(0.5, 0, 0, -50), BackgroundTransparency = 1}):Play()
 		TweenService:Create(MPrompt.Title, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
+		
+		task.spawn(function()
+			task.wait(0.5)
+			MPrompt.Visible = false
+		end)
 	end
-	
+
 	if Minimised then
 		spawn(Maximise)
 	end
@@ -1593,7 +1600,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				color = Color3.fromHSV(h,s,v)
 				setDisplay()
 			end
-			
+
 			ColorPicker.MouseEnter:Connect(function()
 				TweenService:Create(ColorPicker, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackgroundHover}):Play()
 			end)
@@ -2620,11 +2627,11 @@ if useStudio then
 			Key = {"Hello"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
 		}
 	})
-	
+
 	local Tab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
-	
+
 	local Section = Tab:CreateSection("Section Example")
-	
+
 	RayfieldLibrary:Notify({
 		Title = "Notification Title",
 		Content = "Notification Content",
@@ -2641,14 +2648,14 @@ if useStudio then
 
 		},
 	})
-	
+
 	local Button = Tab:CreateButton({
 		Name = "Button Example",
 		Callback = function()
 			-- The function that takes place when the button is pressed
 		end,
 	})
-	
+
 	local Toggle = Tab:CreateToggle({
 		Name = "Toggle Example",
 		CurrentValue = false,
@@ -2658,7 +2665,7 @@ if useStudio then
 			-- The variable (Value) is a boolean on whether the toggle is true or false
 		end,
 	})
-	
+
 	local ColorPicker = Tab:CreateColorPicker({
 		Name = "Color Picker",
 		Color = Color3.fromRGB(255,255,255),
@@ -2668,7 +2675,7 @@ if useStudio then
 			-- The variable (Value) is a Color3fromRGB value based on which color is selected
 		end
 	})
-	
+
 	local Slider = Tab:CreateSlider({
 		Name = "Slider Example",
 		Range = {0, 100},
@@ -2681,7 +2688,7 @@ if useStudio then
 			-- The variable (Value) is a number which correlates to the value the slider is currently at
 		end,
 	})
-	
+
 	local Input = Tab:CreateInput({
 		Name = "Input Example",
 		PlaceholderText = "Input Placeholder",
@@ -2691,7 +2698,7 @@ if useStudio then
 			-- The variable (Text) is a string for the value in the text box
 		end,
 	})
-	
+
 	local Dropdown = Tab:CreateDropdown({
 		Name = "Dropdown Example",
 		Options = {"Option 1","Option 2"},
@@ -2703,7 +2710,7 @@ if useStudio then
 			-- The variable (Option) is a table of strings for the current selected options
 		end,
 	})
-	
+
 	local Keybind = Tab:CreateKeybind({
 		Name = "Keybind Example",
 		CurrentKeybind = "Q",
@@ -2714,9 +2721,9 @@ if useStudio then
 			-- The variable (Keybind) is a boolean for whether the keybind is being held or not (HoldToInteract needs to be true)
 		end,
 	})
-	
+
 	local Label = Tab:CreateLabel("Label Example")
-	
+
 	local Paragraph = Tab:CreateParagraph({Title = "Paragraph Example", Content = "Paragraph Example"})
 end
 
