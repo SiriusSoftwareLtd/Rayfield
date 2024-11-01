@@ -183,7 +183,7 @@ local CEnabled = false
 local Minimised = false
 local Hidden = false
 local Debounce = false
-local Notifications = Rayfield.Notifications
+local Notifications = Rayfield.NotificationsOld
 
 local SelectedTheme = RayfieldLibrary.Theme.Default
 
