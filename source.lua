@@ -2604,6 +2604,9 @@ function RayfieldLibrary:LoadConfiguration()
 end
 
 if useStudio then
+	-- run w/ studio
+	-- Feel free to place your own script here to see how it'd work in Roblox Studio before running it on your execution software.
+	
 	local Window = RayfieldLibrary:CreateWindow({
 		Name = "Rayfield Example Window",
 		LoadingTitle = "Rayfield Interface Suite",
