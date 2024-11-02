@@ -521,7 +521,7 @@ function RayfieldLibrary:Notify(data) -- action e.g open messages
 		-- Set Data
 		newNotification.Title.Text = data.Title or "Unknown Title"
 		newNotification.Description.Text = data.Content or "Unknown Content"
-		newNotification.Icon.Image = "rbxassetid://" .. data.Image or 0
+		newNotification.Icon.Image = "rbxassetid://" .. (data.Image or 0)
 
 		-- Set initial transparency values
 		newNotification.BackgroundTransparency = 1
@@ -2559,6 +2559,8 @@ if useStudio then
 
 	local Tab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
 	local Tab2 = Window:CreateTab("Tab Example 2", 4483362458) -- Title, Image
+
+	RayfieldLibrary:Notify({Title = "Rayfield Interface", Content = "Welcome to Rayfield. These - are the brand new notification design for Rayfield, with custom sizing and Rayfield calculated wait times.", Image = 4483362458})
 
 	local Section = Tab:CreateSection("Section Example")
 	
