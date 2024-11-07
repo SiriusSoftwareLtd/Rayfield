@@ -10,7 +10,7 @@ iRay  | Programming
 
 
 
-local Release = "1.02"
+local Release = "1.03"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -220,7 +220,7 @@ end
 local function AddDraggingFunctionality(DragPoint, Main)
 	pcall(function()
 		local Dragging, DragInput, MousePos, FramePos
-		
+
 		DragPoint.InputBegan:Connect(function(Input)
 			if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
 				Dragging = true
@@ -234,13 +234,13 @@ local function AddDraggingFunctionality(DragPoint, Main)
 				end)
 			end
 		end)
-		
+
 		DragPoint.InputChanged:Connect(function(Input)
 			if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
 				DragInput = Input
 			end
 		end)
-		
+
 		UserInputService.InputChanged:Connect(function(Input)
 			if Input == DragInput and Dragging then
 				local Delta = Input.Position - MousePos
@@ -290,7 +290,7 @@ end
 
 function RayfieldLibrary:Notify(data) -- action e.g open messages
 	task.spawn(function()
-		
+
 		-- Notification Object Creation
 		local newNotification = Notifications.Template:Clone()
 		newNotification.Name = data.Title or 'No Title Provided'
@@ -314,7 +314,7 @@ function RayfieldLibrary:Notify(data) -- action e.g open messages
 		newNotification.Icon.BackgroundTransparency = 1
 
 		task.wait()
-		
+
 		if data.Actions then
 			warn('Rayfield | Not seeing your actions in notifications?')
 			print("Notification Actions are being sunset for now, keep up to date on when they're back in the discord. (sirius.menu/discord)")
@@ -328,7 +328,7 @@ function RayfieldLibrary:Notify(data) -- action e.g open messages
 		newNotification.Icon.Position = UDim2.new(0, 20, 0.5, 0)
 
 		newNotification.Visible = true
-		
+
 		TweenService:Create(newNotification, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, 0, 0, math.max(bounds[1] + bounds[2] + 31, 60))}):Play()
 
 		task.wait(0.15)
@@ -365,7 +365,7 @@ function RayfieldLibrary:Notify(data) -- action e.g open messages
 	end)
 end
 
-function Hide(notify: boolean?)
+local function Hide(notify: boolean?)
 	if MPrompt then
 		MPrompt.Position = UDim2.new(0.5, 0, 0, -50)
 		MPrompt.Size = UDim2.new(0, 40, 0, 10)
@@ -439,7 +439,7 @@ function Hide(notify: boolean?)
 	Debounce = false
 end
 
-function Unhide()
+local function Unhide()
 	Debounce = true
 	Main.Position = UDim2.new(0.5, 0, 0.5, 0)
 	Main.Visible = true
@@ -455,7 +455,7 @@ function Unhide()
 	if MPrompt then
 		TweenService:Create(MPrompt, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 40, 0, 10), Position = UDim2.new(0.5, 0, 0, -50), BackgroundTransparency = 1}):Play()
 		TweenService:Create(MPrompt.Title, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
-		
+
 		task.spawn(function()
 			task.wait(0.5)
 			MPrompt.Visible = false
@@ -465,13 +465,13 @@ function Unhide()
 	if Minimised then
 		task.spawn(Maximise)
 	end
-	
+
 	for _, TopbarButton in ipairs(Topbar:GetChildren()) do
 		if TopbarButton.ClassName == "ImageButton" then
 			TweenService:Create(TopbarButton, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.8}):Play()
 		end
 	end
-	
+
 	for _, tabbtn in ipairs(TabList:GetChildren()) do
 		if tabbtn.ClassName == "Frame" and tabbtn.Name ~= "Placeholder" then
 			if tostring(Elements.UIPageLayout.CurrentPage) == tabbtn.Title.Text then
@@ -489,7 +489,7 @@ function Unhide()
 			end
 		end
 	end
-	
+
 	for _, tab in ipairs(Elements:GetChildren()) do
 		if tab.Name ~= "Template" and tab.ClassName == "ScrollingFrame" and tab.Name ~= "Placeholder" then
 			for _, element in ipairs(tab:GetChildren()) do
@@ -517,7 +517,7 @@ function Unhide()
 	Debounce = false
 end
 
-function Maximise()
+local function Maximise()
 	Debounce = true
 	Topbar.ChangeSize.Image = "rbxassetid://"..10137941941
 
@@ -583,7 +583,7 @@ function Maximise()
 	Debounce = false
 end
 
-function Minimise()
+local function Minimise()
 	Debounce = true
 	Topbar.ChangeSize.Image = "rbxassetid://"..11036884234
 
@@ -655,7 +655,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	Topbar.Visible = false
 	Elements.Visible = false
 	LoadingFrame.Visible = true
-	
+
 	if Settings.DisableRayfieldPrompts then
 		noMarket = true
 	end
@@ -2078,7 +2078,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					Dragging = true 
 				end 
 			end)
-			
+
 			Slider.Main.Interact.InputEnded:Connect(function(Input) 
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then 
 					TweenService:Create(Slider.Main.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0.4}):Play()
@@ -2310,7 +2310,7 @@ end
 if useStudio then
 	-- run w/ studio
 	-- Feel free to place your own script here to see how it'd work in Roblox Studio before running it on your execution software.
-	
+
 	local Window = RayfieldLibrary:CreateWindow({
 		Name = "Rayfield Example Window",
 		LoadingTitle = "Rayfield Interface Suite",
@@ -2343,7 +2343,7 @@ if useStudio then
 	RayfieldLibrary:Notify({Title = "Rayfield Interface", Content = "Welcome to Rayfield. These - are the brand new notification design for Rayfield, with custom sizing and Rayfield calculated wait times.", Image = 4483362458})
 
 	local Section = Tab:CreateSection("Section Example")
-	
+
 	local Button = Tab:CreateButton({
 		Name = "Button Example",
 		Callback = function()
