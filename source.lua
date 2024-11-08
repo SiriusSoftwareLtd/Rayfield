@@ -43,9 +43,9 @@ local RayfieldLibrary = {
 			ElementStroke = Color3.fromRGB(50, 50, 50),
 			SecondaryElementStroke = Color3.fromRGB(40, 40, 40), -- For labels and paragraphs
 
-			SliderBackground = Color3.fromRGB(43, 105, 159),
-			SliderProgress = Color3.fromRGB(43, 105, 159),
-			SliderStroke = Color3.fromRGB(48, 119, 177),
+			SliderBackground = Color3.fromRGB(50, 138, 220),
+			SliderProgress = Color3.fromRGB(50, 138, 220),
+			SliderStroke = Color3.fromRGB(58, 163, 255),
 
 			ToggleBackground = Color3.fromRGB(30, 30, 30),
 			ToggleEnabled = Color3.fromRGB(0, 146, 214),
@@ -2331,7 +2331,7 @@ Topbar.ChangeSize.MouseButton1Click:Connect(function()
 end)
 
 Main.Search.Input:GetPropertyChangedSignal('Text'):Connect(function()
-	
+
 	if #Main.Search.Input.Text > 0 then
 		if not Elements.UIPageLayout.CurrentPage:FindFirstChild('SearchTitle-fsefsefesfsefesfesfThanks') then 
 			local searchTitle = Elements.Template.SectionTitle:Clone()
@@ -2343,12 +2343,12 @@ Main.Search.Input:GetPropertyChangedSignal('Text'):Connect(function()
 		end
 	else
 		local searchTitle = Elements.UIPageLayout.CurrentPage:FindFirstChild('SearchTitle-fsefsefesfsefesfesfThanks')
-		
+
 		if searchTitle then
 			searchTitle:Destroy()
 		end
 	end
-	
+
 	for _, element in ipairs(Elements.UIPageLayout.CurrentPage:GetChildren()) do
 		if element.ClassName ~= 'UIListLayout' and element.Name ~= 'Placeholder' and element.Name ~= 'SearchTitle-fsefsefesfsefesfesfThanks' then
 			if element.Name == 'SectionTitle' then
