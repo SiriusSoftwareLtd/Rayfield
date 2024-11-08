@@ -2349,7 +2349,7 @@ Main.Search.Input:GetPropertyChangedSignal('Text'):Connect(function()
 					element.Visible = false
 				end
 			else
-				if string.lower(element.Name):find(Main.Search.Input.Text, 1, true) then
+				if string.lower(element.Name):find(string.lower(Main.Search.Input.Text), 1, true) then
 					element.Visible = true
 				else
 					element.Visible = false
