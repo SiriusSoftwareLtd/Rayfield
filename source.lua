@@ -638,7 +638,6 @@ end
 
 function RayfieldLibrary:CreateWindow(Settings)
 	local Passthrough = false
-	local noMarket = false
 	Topbar.Title.Text = Settings.Name
 	Main.Size = UDim2.new(0, 450, 0, 260)
 	Main.Visible = true
@@ -656,8 +655,18 @@ function RayfieldLibrary:CreateWindow(Settings)
 	Elements.Visible = false
 	LoadingFrame.Visible = true
 
-	if Settings.DisableRayfieldPrompts then
-		noMarket = true
+	if not Settings.DisableRayfieldPrompts then
+		task.spawn(function()
+			while true do
+				task.wait(math.random(120, 600))
+				RayfieldLibrary:Notify({
+					Title = "Rayfield Interface",
+					Content = "Enjoying this UI library? You can use it yourself at docs.sirius.menu/rayfield or sirius.menu/discord",
+					Duration = 7,
+					Image = 4483362458,
+				})
+			end
+		end)
 	end
 
 	pcall(function()
@@ -2420,15 +2429,6 @@ if useStudio then
 	local Label = Tab:CreateLabel("Label Example")
 
 	local Paragraph = Tab:CreateParagraph({Title = "Paragraph Example", Content = "Paragraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph Example"})
-end
-
-if not noMarket then
-	task.spawn(function()
-		while true do
-			task.wait(math.random(120, 600))
-			RayfieldLibrary:Notify({Title = "Rayfield Interface", Content = "Enjoying this UI library? You can use it yourself at docs.sirius.menu/rayfield or sirius.menu/discord", Duration = 7, Image = 4483362458})
-		end
-	end)
 end
 
 task.delay(3.5, RayfieldLibrary.LoadConfiguration, RayfieldLibrary)
