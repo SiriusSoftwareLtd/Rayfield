@@ -10,7 +10,7 @@ iRay  | Programming
 
 
 
-local Release = "Build 1.18"
+local Release = "Build 1.18a"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
