@@ -10,7 +10,7 @@ iRay  | Programming
 
 
 
-local Release = "Build 1.1a"
+local Release = "Build 1.16"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -733,6 +733,8 @@ local function Minimise()
 	Debounce = true
 	Topbar.ChangeSize.Image = "rbxassetid://"..11036884234
 
+	Topbar.UIStroke.Color = SelectedTheme.ElementStroke
+
 	task.spawn(closeSearch)
 	searchOpen = false
 
@@ -1185,10 +1187,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				end
 			end
 			if Elements.UIPageLayout.CurrentPage ~= TabPage then
-				TweenService:Create(Elements, TweenInfo.new(1, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 460, 1, -130)}):Play()
 				Elements.UIPageLayout:JumpTo(TabPage)
-				task.wait(0.2)
-				TweenService:Create(Elements, TweenInfo.new(0.8, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 475, 1, -100)}):Play()
 			end
 
 		end)
@@ -1281,7 +1280,17 @@ function RayfieldLibrary:CreateWindow(Settings)
 			ColorPicker.HexInput.Position = UDim2.new(0, 17, 0, 90)
 			Main.ImageTransparency = 1
 			Background.BackgroundTransparency = 1
-
+			
+			for _, rgbinput in ipairs(ColorPicker.RGB:GetChildren()) do
+				if rgbinput:IsA("Frame") then
+					rgbinput.BackgroundColor3 = SelectedTheme.InputBackground
+					rgbinput.UIStroke.Color = SelectedTheme.InputStroke
+				end
+			end
+			
+			ColorPicker.HexInput.BackgroundColor3 = SelectedTheme.InputBackground
+			ColorPicker.HexInput.UIStroke.Color = SelectedTheme.InputStroke
+			
 
 
 			local opened = false 
@@ -1290,8 +1299,18 @@ function RayfieldLibrary:CreateWindow(Settings)
 			local mainDragging = false 
 			local sliderDragging = false 
 			ColorPicker.Interact.MouseButton1Down:Connect(function()
+				task.spawn(function()
+					TweenService:Create(ColorPicker, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackgroundHover}):Play()
+					TweenService:Create(ColorPicker.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
+					task.wait(0.2)
+					TweenService:Create(ColorPicker, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
+					TweenService:Create(ColorPicker.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
+				end)
+
 				if not opened then
 					opened = true 
+					TweenService:Create(Background, TweenInfo.new(0.45, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 18, 0, 15)}):Play()
+					task.wait(0.1)
 					TweenService:Create(ColorPicker, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, -10, 0, 120)}):Play()
 					TweenService:Create(Background, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 173, 0, 86)}):Play()
 					TweenService:Create(Display, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
@@ -1300,7 +1319,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(ColorPicker.HexInput, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Position = UDim2.new(0, 17, 0, 73)}):Play()
 					TweenService:Create(ColorPicker.Interact, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Size = UDim2.new(0.574, 0, 1, 0)}):Play()
 					TweenService:Create(Main.MainPoint, TweenInfo.new(0.2, Enum.EasingStyle.Exponential), {ImageTransparency = 0}):Play()
-					TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Exponential), {ImageTransparency = 0.1}):Play()
+					TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Exponential), {ImageTransparency = SelectedTheme ~= RayfieldLibrary.Theme.Default and 0.25 or 0.1}):Play()
 					TweenService:Create(Background, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
 				else
 					opened = false
@@ -1315,6 +1334,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
 					TweenService:Create(Background, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
 				end
+				
 			end)
 
 			UserInputService.InputEnded:Connect(function(input, gameProcessed) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
@@ -1409,7 +1429,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				pcall(function()ColorPickerSettings.Callback(Color3.fromHSV(h,s,v))end)
 			end)
 
-			game:GetService("RunService").RenderStepped:connect(function()
+			RunService.RenderStepped:connect(function()
 				if mainDragging then 
 					local localX = math.clamp(mouse.X-Main.AbsolutePosition.X,0,Main.AbsoluteSize.X)
 					local localY = math.clamp(mouse.Y-Main.AbsolutePosition.Y,0,Main.AbsoluteSize.Y)
@@ -1669,6 +1689,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Dropdown.BackgroundTransparency = 1
 			Dropdown.UIStroke.Transparency = 1
 			Dropdown.Title.TextTransparency = 1
+			Dropdown.Toggle.ImageColor3 = SelectedTheme.TextColor
 
 			Dropdown.Size = UDim2.new(1, -10, 0, 45)
 
@@ -1738,10 +1759,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 					DropdownOption.Title.Text = Option
 					DropdownOption.Parent = Dropdown.List
 					DropdownOption.Visible = true
+					
+					DropdownOption.UIStroke.Color = SelectedTheme.ElementStroke
 
-					if DropdownSettings.CurrentOption == Option then
-						DropdownOption.BackgroundColor3 = SelectedTheme.DropdownSelected
-					end
+					DropdownOption.BackgroundColor3 = DropdownSettings.CurrentOption == Option and SelectedTheme.DropdownSelected or SelectedTheme.DropdownUnselected
 
 					DropdownOption.BackgroundTransparency = 1
 					DropdownOption.UIStroke.Transparency = 1
@@ -2350,6 +2371,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 	Topbar.BackgroundTransparency = 1
 	Topbar.Divider.Size = UDim2.new(0, 0, 0, 1)
+	Topbar.Divider.BackgroundColor3 = SelectedTheme.ElementStroke
 	Topbar.CornerRepair.BackgroundTransparency = 1
 	Topbar.Title.TextTransparency = 1
 	Topbar.Search.ImageTransparency = 1
@@ -2522,7 +2544,7 @@ function RayfieldLibrary:LoadConfiguration()
 	end
 end
 
---ChangeTheme('Green')
+ChangeTheme('DarkBlue')
 
 if useStudio then
 	-- run w/ studio
@@ -2556,6 +2578,41 @@ if useStudio then
 
 	local Tab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
 	local Tab2 = Window:CreateTab("Tab Example 2", 4483362458) -- Title, Image
+
+	local Section = Tab2:CreateSection("Section")
+
+	local ColorPicker = Tab2:CreateColorPicker({
+		Name = "Color Picker",
+		Color = Color3.fromRGB(255,255,255),
+		Flag = "ColorPicker1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+		Callback = function(Value)
+			-- The function that takes place every time the color picker is moved/changed
+			-- The variable (Value) is a Color3fromRGB value based on which color is selected
+		end
+	})
+
+	local Slider = Tab2:CreateSlider({
+		Name = "Slider Example",
+		Range = {0, 100},
+		Increment = 10,
+		Suffix = "Bananas",
+		CurrentValue = 40,
+		Flag = "Slider1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+		Callback = function(Value)
+			-- The function that takes place when the slider changes
+			-- The variable (Value) is a number which correlates to the value the slider is currently at
+		end,
+	})
+
+	local Input = Tab2:CreateInput({
+		Name = "Input Example",
+		PlaceholderText = "Input Placeholder",
+		RemoveTextAfterFocusLost = false,
+		Callback = function(Text)
+			-- The function that takes place when the input is changed
+			-- The variable (Text) is a string for the value in the text box
+		end,
+	})
 
 	RayfieldLibrary:Notify({Title = "Rayfield Interface", Content = "Welcome to Rayfield. These - are the brand new notification design for Rayfield, with custom sizing and Rayfield calculated wait times.", Image = 4483362458})
 
