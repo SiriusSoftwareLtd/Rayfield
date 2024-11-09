@@ -61,7 +61,7 @@ local RayfieldLibrary = {
 			InputStroke = Color3.fromRGB(65, 65, 65),
 			PlaceholderColor = Color3.fromRGB(178, 178, 178)
 		},
-		
+
 		Light = {
 			TextColor = Color3.fromRGB(40, 40, 40), -- Darker text for readability on light background
 
@@ -103,7 +103,7 @@ local RayfieldLibrary = {
 			InputStroke = Color3.fromRGB(180, 180, 180),
 			PlaceholderColor = Color3.fromRGB(140, 140, 140)
 		},
-		
+
 		Green = {
 			TextColor = Color3.fromRGB(30, 60, 30), -- Deep green for readability
 
@@ -145,7 +145,7 @@ local RayfieldLibrary = {
 			InputStroke = Color3.fromRGB(180, 200, 180),
 			PlaceholderColor = Color3.fromRGB(120, 140, 120)
 		},
-		
+
 		DarkBlue = {
 			TextColor = Color3.fromRGB(230, 230, 230), -- Light gray for high contrast on dark backgrounds
 
@@ -293,7 +293,7 @@ function ChangeTheme(ThemeName)
 	Rayfield.Main.Topbar.ChangeSize.ImageColor3 = SelectedTheme.TextColor
 	Rayfield.Main.Topbar.Hide.ImageColor3 = SelectedTheme.TextColor
 	Rayfield.Main.Topbar.Search.ImageColor3 = SelectedTheme.TextColor
-	
+
 	for _, text in ipairs(Rayfield:GetDescendants()) do
 		if text:IsA('TextLabel') or text:IsA('TextBox') then text.TextColor3 = SelectedTheme.TextColor end
 	end
@@ -306,7 +306,7 @@ function ChangeTheme(ThemeName)
 			end
 		end
 	end
-	
+
 end
 
 local function makeDraggable(object, dragObject, enableTaptic)
@@ -334,7 +334,7 @@ local function makeDraggable(object, dragObject, enableTaptic)
 			end)
 		end
 	end
-	
+
 	connectFunctions()
 
 	dragObject.InputBegan:Connect(function(input, processed)
@@ -496,7 +496,7 @@ end
 
 local function openSearch()
 	searchOpen = true
-	
+
 	Main.Search.BackgroundTransparency = 1
 	Main.Search.Shadow.ImageTransparency = 1
 	Main.Search.Input.TextTransparency = 1
@@ -530,7 +530,7 @@ end
 
 local function closeSearch()
 	searchOpen = false
-	
+
 	TweenService:Create(Main.Search, TweenInfo.new(0.35, Enum.EasingStyle.Quint), {BackgroundTransparency = 1, Size = UDim2.new(1, -55, 0, 30)}):Play()
 	TweenService:Create(Main.Search.Search, TweenInfo.new(0.15, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
 	TweenService:Create(Main.Search.Shadow, TweenInfo.new(0.15, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
@@ -553,7 +553,7 @@ local function closeSearch()
 			end
 		end
 	end
-	
+
 	Main.Search.Input.Text = ''
 	Main.Search.Input.Interactable = false
 end
@@ -845,10 +845,14 @@ function RayfieldLibrary:CreateWindow(Settings)
 	if Settings.LoadingTitle ~= "Rayfield Interface Suite" then
 		LoadingFrame.Version.Text = "Rayfield UI"
 	end
-	dragBar.Visible = false
-	dragBarCosmetic.BackgroundTransparency = 1
-	dragBar.Visible = true
 	
+	if dragBar then
+		dragBar.Visible = false
+		dragBarCosmetic.BackgroundTransparency = 1
+		dragBar.Visible = true
+	end
+
+
 	if Settings.Theme then
 		local success = pcall(ChangeTheme, Settings.Theme)
 		if not success then
@@ -859,7 +863,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			warn('issue rendering theme. no theme on file')
 		end
 	end
-	
+
 	Topbar.Visible = false
 	Elements.Visible = false
 	LoadingFrame.Visible = true
@@ -1332,17 +1336,17 @@ function RayfieldLibrary:CreateWindow(Settings)
 			ColorPicker.HexInput.Position = UDim2.new(0, 17, 0, 90)
 			Main.ImageTransparency = 1
 			Background.BackgroundTransparency = 1
-			
+
 			for _, rgbinput in ipairs(ColorPicker.RGB:GetChildren()) do
 				if rgbinput:IsA("Frame") then
 					rgbinput.BackgroundColor3 = SelectedTheme.InputBackground
 					rgbinput.UIStroke.Color = SelectedTheme.InputStroke
 				end
 			end
-			
+
 			ColorPicker.HexInput.BackgroundColor3 = SelectedTheme.InputBackground
 			ColorPicker.HexInput.UIStroke.Color = SelectedTheme.InputStroke
-			
+
 
 
 			local opened = false 
@@ -1386,7 +1390,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
 					TweenService:Create(Background, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
 				end
-				
+
 			end)
 
 			UserInputService.InputEnded:Connect(function(input, gameProcessed) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
@@ -1811,7 +1815,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					DropdownOption.Title.Text = Option
 					DropdownOption.Parent = Dropdown.List
 					DropdownOption.Visible = true
-					
+
 					DropdownOption.UIStroke.Color = SelectedTheme.ElementStroke
 
 					DropdownOption.BackgroundColor3 = DropdownSettings.CurrentOption == Option and SelectedTheme.DropdownSelected or SelectedTheme.DropdownUnselected
@@ -2429,7 +2433,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	Topbar.Search.ImageTransparency = 1
 	Topbar.ChangeSize.ImageTransparency = 1
 	Topbar.Hide.ImageTransparency = 1
-	
+
 
 	task.wait(0.5)
 	Topbar.Visible = true
@@ -2446,9 +2450,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 	task.wait(0.1)
 	TweenService:Create(Topbar.Hide, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.8}):Play()
 	task.wait(0.3)
-	
+
 	TweenService:Create(dragBarCosmetic, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.7}):Play()
-	
+
 
 	return Window
 end
