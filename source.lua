@@ -2451,8 +2451,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 	TweenService:Create(Topbar.Hide, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.8}):Play()
 	task.wait(0.3)
 
-	TweenService:Create(dragBarCosmetic, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.7}):Play()
-
+	if dragBar then
+		TweenService:Create(dragBarCosmetic, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.7}):Play()
+	end
 
 	return Window
 end
