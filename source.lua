@@ -61,7 +61,7 @@ local RayfieldLibrary = {
 			InputStroke = Color3.fromRGB(65, 65, 65),
 			PlaceholderColor = Color3.fromRGB(178, 178, 178)
 		},
-		
+
 		Ocean = {
 			TextColor = Color3.fromRGB(230, 240, 240),
 
@@ -187,7 +187,7 @@ local RayfieldLibrary = {
 			InputStroke = Color3.fromRGB(180, 180, 180),
 			PlaceholderColor = Color3.fromRGB(140, 140, 140)
 		},
-		
+
 		Amethyst = {
 			TextColor = Color3.fromRGB(240, 240, 240),
 
@@ -313,7 +313,7 @@ local RayfieldLibrary = {
 			InputStroke = Color3.fromRGB(220, 190, 200),
 			PlaceholderColor = Color3.fromRGB(170, 130, 140)
 		},
-		
+
 		DarkBlue = {
 			TextColor = Color3.fromRGB(230, 230, 230), -- Light gray for high contrast on dark backgrounds
 
@@ -355,8 +355,6 @@ local RayfieldLibrary = {
 			InputStroke = Color3.fromRGB(45, 50, 60), -- Deepened input stroke
 			PlaceholderColor = Color3.fromRGB(150, 150, 160)
 		}
-
-
 
 	}
 }
@@ -764,7 +762,7 @@ local function Hide(notify: boolean?)
 			RayfieldLibrary:Notify({Title = "Interface Hidden", Content = "The interface has been hidden, you can unhide the interface by tapping K.", Duration = 7})
 		end
 	end
-	
+
 	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 470, 0, 0)}):Play()
 	TweenService:Create(Main.Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 470, 0, 45)}):Play()
 	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
@@ -786,7 +784,7 @@ local function Hide(notify: boolean?)
 			TweenService:Create(TopbarButton, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
 		end
 	end
-	
+
 	for _, tabbtn in ipairs(TabList:GetChildren()) do
 		if tabbtn.ClassName == "Frame" and tabbtn.Name ~= "Placeholder" then
 			TweenService:Create(tabbtn, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
@@ -795,7 +793,7 @@ local function Hide(notify: boolean?)
 			TweenService:Create(tabbtn.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 		end
 	end
-	
+
 	for _, tab in ipairs(Elements:GetChildren()) do
 		if tab.Name ~= "Template" and tab.ClassName == "ScrollingFrame" and tab.Name ~= "Placeholder" then
 			for _, element in ipairs(tab:GetChildren()) do
@@ -818,7 +816,7 @@ local function Hide(notify: boolean?)
 			end
 		end
 	end
-	
+
 	task.wait(0.5)
 	Main.Visible = false
 	Debounce = false
@@ -957,9 +955,9 @@ local function Unhide()
 			end
 		end
 	end
-	
+
 	TweenService:Create(dragBarCosmetic, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 0.5}):Play()
-	
+
 	task.wait(0.5)
 	Minimised = false
 	Debounce = false
@@ -1024,19 +1022,19 @@ end
 function RayfieldLibrary:CreateWindow(Settings)
 	local Passthrough = false
 	Topbar.Title.Text = Settings.Name
-	
+
 	Main.Size = UDim2.new(0, 450, 0, 260)
 	Main.Visible = true
 	Main.BackgroundTransparency = 1
 	Main.Shadow.Image.ImageTransparency = 1
-	
+
 	LoadingFrame.Title.TextTransparency = 1
 	LoadingFrame.Subtitle.TextTransparency = 1
-	
+
 	LoadingFrame.Version.TextTransparency = 1
 	LoadingFrame.Title.Text = Settings.LoadingTitle or "Rayfield Interface Suite"
 	LoadingFrame.Subtitle.Text = Settings.LoadingSubtitle or "by Sirius"
-	
+
 	if Settings.LoadingTitle ~= "Rayfield Interface Suite" then
 		LoadingFrame.Version.Text = "Rayfield UI"
 	end
@@ -1084,7 +1082,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		if Settings.ConfigurationSaving.Enabled == nil then
 			Settings.ConfigurationSaving.Enabled = false
 		end
-		
+
 		CFileName = Settings.ConfigurationSaving.FileName
 		ConfigurationFolder = Settings.ConfigurationSaving.FolderName or ConfigurationFolder
 		CEnabled = Settings.ConfigurationSaving.Enabled
@@ -1112,7 +1110,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		if not isfolder(RayfieldFolder.."/Discord Invites") then
 			makefolder(RayfieldFolder.."/Discord Invites")
 		end
-		
+
 		if not isfile(RayfieldFolder.."/Discord Invites".."/"..Settings.Discord.Invite..ConfigurationExtension) then
 			if request then
 				request({
@@ -1365,7 +1363,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			TabButton.Title.TextXAlignment = Enum.TextXAlignment.Left
 			TabButton.Size = UDim2.new(0, TabButton.Title.TextBounds.X + 52, 0, 30)
 		end
-		
+
 
 
 		TabButton.BackgroundTransparency = 1
@@ -1394,7 +1392,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Elements.UIPageLayout:JumpTo(TabPage)
 			Elements.UIPageLayout.Animated = true
 		end
-		
+
 		TabButton.UIStroke.Color = SelectedTheme.TabStroke
 
 		if Elements.UIPageLayout.CurrentPage == TabPage then
@@ -1874,7 +1872,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Input.BackgroundTransparency = 1
 			Input.UIStroke.Transparency = 1
 			Input.Title.TextTransparency = 1
-			
+
 			Input.InputFrame.InputBox.Text = InputSettings.CurrentValue or ''
 
 			Input.InputFrame.BackgroundColor3 = SelectedTheme.InputBackground
@@ -1892,7 +1890,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					InputSettings.Callback(Input.InputFrame.InputBox.Text)
 					InputSettings.CurrentValue = Input.InputFrame.InputBox.Text
 				end)
-				
+
 				if not Success then
 					TweenService:Create(Input, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 					TweenService:Create(Input.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
@@ -1908,7 +1906,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				if InputSettings.RemoveTextAfterFocusLost then
 					Input.InputFrame.InputBox.Text = ""
 				end
-				
+
 				SaveConfiguration()
 			end)
 
@@ -1928,7 +1926,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				Input.InputFrame.InputBox.Text = text
 				SaveConfiguration()
 			end
-			
+
 			if Settings.ConfigurationSaving then
 				if Settings.ConfigurationSaving.Enabled and InputSettings.Flag then
 					RayfieldLibrary.Flags[InputSettings.Flag] = InputSettings
@@ -2972,8 +2970,8 @@ if useStudio then
 			-- The variable (Text) is a string for the value in the text box
 		end,
 	})
-	
-	
+
+
 
 	RayfieldLibrary:Notify({Title = "Rayfield Interface", Content = "Welcome to Rayfield. These - are the brand new notification design for Rayfield, with custom sizing and Rayfield calculated wait times.", Image = 4483362458})
 
@@ -3022,8 +3020,8 @@ if useStudio then
 
 	local Input = Tab:CreateInput({
 		Name = "Input Example",
-		CurrentValue = "YTyyy",
-		PlaceholderText = "Input Placeholder",
+		CurrentValue = "",
+		PlaceholderText = "Adaptive Input",
 		RemoveTextAfterFocusLost = false,
 		Flag = 'InputExample',
 		Callback = function(Text)
@@ -3031,12 +3029,9 @@ if useStudio then
 			-- The variable (Text) is a string for the value in the text box
 		end,
 	})
-	
-	Input:Set('hi')
 
 	local thoptions = {}
 	for themename, theme in pairs(RayfieldLibrary.Theme) do
-		print(themename)
 		table.insert(thoptions, themename)
 	end
 
