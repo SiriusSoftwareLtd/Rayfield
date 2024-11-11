@@ -2779,6 +2779,8 @@ if useStudio then
 			-- The variable (Text) is a string for the value in the text box
 		end,
 	})
+	
+	
 
 	RayfieldLibrary:Notify({Title = "Rayfield Interface", Content = "Welcome to Rayfield. These - are the brand new notification design for Rayfield, with custom sizing and Rayfield calculated wait times.", Image = 4483362458})
 
@@ -2827,6 +2829,7 @@ if useStudio then
 
 	local Input = Tab:CreateInput({
 		Name = "Input Example",
+		CurrentValue = "YTyyy",
 		PlaceholderText = "Input Placeholder",
 		RemoveTextAfterFocusLost = false,
 		Flag = 'InputExample',
@@ -2835,6 +2838,8 @@ if useStudio then
 			-- The variable (Text) is a string for the value in the text box
 		end,
 	})
+	
+	Input:Set('hi')
 
 	local Dropdown = Tab:CreateDropdown({
 		Name = "Dropdown Example",
