@@ -1716,12 +1716,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 					Input.InputFrame.InputBox.Text = ""
 				end
 				
-				if Settings.ConfigurationSaving then
-					if Settings.ConfigurationSaving.Enabled and InputSettings.Flag then
-						RayfieldLibrary.Flags[InputSettings.Flag] = InputSettings
-					end
-				end
-				
 				SaveConfiguration()
 			end)
 
@@ -1737,9 +1731,15 @@ function RayfieldLibrary:CreateWindow(Settings)
 				TweenService:Create(Input.InputFrame, TweenInfo.new(0.55, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(0, Input.InputFrame.InputBox.TextBounds.X + 24, 0, 30)}):Play()
 			end)
 
-			local InputSettings = {}
-			function InputSettings:Set(text) --Doesnt fire the event
+			function InputSettings:Set(text)
 				Input.InputFrame.InputBox.Text = text
+				SaveConfiguration()
+			end
+			
+			if Settings.ConfigurationSaving then
+				if Settings.ConfigurationSaving.Enabled and InputSettings.Flag then
+					RayfieldLibrary.Flags[InputSettings.Flag] = InputSettings
+				end
 			end
 
 			Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
