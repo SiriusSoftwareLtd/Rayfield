@@ -10,7 +10,7 @@ iRay  | Programming
 
 
 
-local Release = "Build 1.31"
+local Release = "Build 1.32"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -1242,7 +1242,14 @@ function RayfieldLibrary:CreateWindow(Settings)
 				local KeyFound = false
 				local FoundKey = ''
 				for _, MKey in ipairs(Settings.KeySettings.Key) do
-					if string.find(KeyMain.Input.InputBox.Text, MKey) then
+					--if string.find(KeyMain.Input.InputBox.Text, MKey) then
+					--	KeyFound = true
+					--	FoundKey = MKey
+					--end
+					
+					
+					-- stricter key check
+					if KeyMain.Input.InputBox.Text == MKey then
 						KeyFound = true
 						FoundKey = MKey
 					end
