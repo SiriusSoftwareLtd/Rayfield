@@ -487,6 +487,9 @@ end
 local function makeDraggable(object, dragObject, enableTaptic)
 	local dragging = false
 	local relative = nil
+	
+	--local previousState = useMobileSizing and UDim2.new(0, 500, 0, 275) or UDim2.new(0, 500, 0, 475)
+	--local newState = UDim2.new(previousState.X.Scale, previousState.X.Offset + 40, previousState.Y.Scale, previousState.Y.Offset + 40)
 
 	local offset = Vector2.zero
 	local screenGui = object:FindFirstAncestorWhichIsA("ScreenGui")
@@ -521,6 +524,11 @@ local function makeDraggable(object, dragObject, enableTaptic)
 
 			relative = object.AbsolutePosition + object.AbsoluteSize * object.AnchorPoint - UserInputService:GetMouseLocation()
 			if enableTaptic then
+				--if object:FindFirstChild('Shadow') then
+				--	TweenService:Create(object.Shadow.Image, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {ImageTransparency = 0.4}):Play()
+				--end
+				--TweenService:Create(object, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = newState}):Play()
+				
 				TweenService:Create(dragBarCosmetic, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 110, 0, 4), BackgroundTransparency = 0}):Play()
 			end
 		end
@@ -536,6 +544,12 @@ local function makeDraggable(object, dragObject, enableTaptic)
 			connectFunctions()
 
 			if enableTaptic then
+				--if object:FindFirstChild('Shadow') then
+				--	TweenService:Create(object.Shadow.Image, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {ImageTransparency = 0.6}):Play()
+				--end
+				
+				--TweenService:Create(object, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = previousState}):Play()
+				
 				TweenService:Create(dragBarCosmetic, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 100, 0, 4), BackgroundTransparency = 0.7}):Play()
 			end
 		end
