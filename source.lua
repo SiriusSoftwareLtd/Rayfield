@@ -10,7 +10,7 @@ iRay  | Programming
 
 
 
-local Release = "Build 1.32"
+local Release = "Build 1.34"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -487,9 +487,6 @@ end
 local function makeDraggable(object, dragObject, enableTaptic)
 	local dragging = false
 	local relative = nil
-	
-	--local previousState = useMobileSizing and UDim2.new(0, 500, 0, 275) or UDim2.new(0, 500, 0, 475)
-	--local newState = UDim2.new(previousState.X.Scale, previousState.X.Offset + 40, previousState.Y.Scale, previousState.Y.Offset + 40)
 
 	local offset = Vector2.zero
 	local screenGui = object:FindFirstAncestorWhichIsA("ScreenGui")
@@ -524,11 +521,6 @@ local function makeDraggable(object, dragObject, enableTaptic)
 
 			relative = object.AbsolutePosition + object.AbsoluteSize * object.AnchorPoint - UserInputService:GetMouseLocation()
 			if enableTaptic then
-				--if object:FindFirstChild('Shadow') then
-				--	TweenService:Create(object.Shadow.Image, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {ImageTransparency = 0.4}):Play()
-				--end
-				--TweenService:Create(object, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = newState}):Play()
-				
 				TweenService:Create(dragBarCosmetic, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 110, 0, 4), BackgroundTransparency = 0}):Play()
 			end
 		end
@@ -544,12 +536,6 @@ local function makeDraggable(object, dragObject, enableTaptic)
 			connectFunctions()
 
 			if enableTaptic then
-				--if object:FindFirstChild('Shadow') then
-				--	TweenService:Create(object.Shadow.Image, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {ImageTransparency = 0.6}):Play()
-				--end
-				
-				--TweenService:Create(object, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = previousState}):Play()
-				
 				TweenService:Create(dragBarCosmetic, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 100, 0, 4), BackgroundTransparency = 0.7}):Play()
 			end
 		end
@@ -1154,7 +1140,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			return
 		end
 
-		if not isfolder(RayfieldFolder.."/Key System") then
+		if isfolder and not isfolder(RayfieldFolder.."/Key System") then
 			makefolder(RayfieldFolder.."/Key System")
 		end
 
@@ -1177,7 +1163,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Settings.KeySettings.FileName = "No file name specified"
 		end
 
-		if isfile(RayfieldFolder.."/Key System".."/"..Settings.KeySettings.FileName..ConfigurationExtension) then
+		if isfile and isfile(RayfieldFolder.."/Key System".."/"..Settings.KeySettings.FileName..ConfigurationExtension) then
 			for _, MKey in ipairs(Settings.KeySettings.Key) do
 				if string.find(readfile(RayfieldFolder.."/Key System".."/"..Settings.KeySettings.FileName..ConfigurationExtension), MKey) then
 					Passthrough = true
@@ -1188,14 +1174,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 		if not Passthrough then
 			local AttemptsRemaining = math.random(2, 5)
 			Rayfield.Enabled = false
-			local KeyUI = game:GetObjects("rbxassetid://11380036235")[1]
-
+			local KeyUI = useStudio and script.Parent:FindFirstChild('Key') or game:GetObjects("rbxassetid://11380036235")[1]
+			
 			if gethui then
 				KeyUI.Parent = gethui()
-			elseif syn.protect_gui then
-				syn.protect_gui(Rayfield)
+			elseif syn and syn.protect_gui then 
+				syn.protect_gui(KeyUI)
 				KeyUI.Parent = CoreGui
-			else
+			elseif not useStudio and CoreGui:FindFirstChild("RobloxGui") then
+				KeyUI.Parent = CoreGui:FindFirstChild("RobloxGui")
+			elseif not useStudio then
 				KeyUI.Parent = CoreGui
 			end
 
@@ -1206,7 +1194,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 						Interface.Name = "KeyUI-Old"
 					end
 				end
-			else
+			elseif not useStudio then
 				for _, Interface in ipairs(CoreGui:GetChildren()) do
 					if Interface.Name == KeyUI.Name and Interface ~= KeyUI then
 						Interface.Enabled = false
@@ -2942,7 +2930,7 @@ if useStudio then
 			Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD
 			RememberJoins = true -- Set this to false to make them join the discord every time they load it up
 		},
-		KeySystem = false, -- Set this to true to use our key system
+		KeySystem = true, -- Set this to true to use our key system
 		KeySettings = {
 			Title = "Untitled",
 			Subtitle = "Key System",
