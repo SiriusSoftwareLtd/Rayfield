@@ -10,7 +10,8 @@ iRay  | Programming
 
 
 
-local Release = "Build 1.34"
+local InterfaceBuild = 'FN83'
+local Release = "Build 1.37"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -38,10 +39,10 @@ local RayfieldLibrary = {
 
 			ElementBackground = Color3.fromRGB(35, 35, 35),
 			ElementBackgroundHover = Color3.fromRGB(40, 40, 40),
-			SecondaryElementBackground = Color3.fromRGB(25, 25, 25), -- For labels and paragraphs
+			SecondaryElementBackground = Color3.fromRGB(25, 25, 25),
 			ElementStroke = Color3.fromRGB(50, 50, 50),
-			SecondaryElementStroke = Color3.fromRGB(40, 40, 40), -- For labels and paragraphs
-
+			SecondaryElementStroke = Color3.fromRGB(40, 40, 40),
+			
 			SliderBackground = Color3.fromRGB(50, 138, 220),
 			SliderProgress = Color3.fromRGB(50, 138, 220),
 			SliderStroke = Color3.fromRGB(58, 163, 255),
@@ -147,14 +148,14 @@ local RayfieldLibrary = {
 		},
 
 		Light = {
-			TextColor = Color3.fromRGB(40, 40, 40), -- Darker text for readability on light background
+			TextColor = Color3.fromRGB(40, 40, 40),
 
 			Background = Color3.fromRGB(245, 245, 245),
 			Topbar = Color3.fromRGB(230, 230, 230),
-			Shadow = Color3.fromRGB(200, 200, 200), -- Subtle shadow to enhance layering
+			Shadow = Color3.fromRGB(200, 200, 200),
 
-			NotificationBackground = Color3.fromRGB(250, 250, 250), -- Light background for notifications
-			NotificationActionsBackground = Color3.fromRGB(240, 240, 240), -- Slight contrast for actions
+			NotificationBackground = Color3.fromRGB(250, 250, 250),
+			NotificationActionsBackground = Color3.fromRGB(240, 240, 240),
 
 			TabBackground = Color3.fromRGB(235, 235, 235),
 			TabStroke = Color3.fromRGB(215, 215, 215),
@@ -164,15 +165,15 @@ local RayfieldLibrary = {
 
 			ElementBackground = Color3.fromRGB(240, 240, 240),
 			ElementBackgroundHover = Color3.fromRGB(225, 225, 225),
-			SecondaryElementBackground = Color3.fromRGB(235, 235, 235), -- Unified look for labels and paragraphs
+			SecondaryElementBackground = Color3.fromRGB(235, 235, 235),
 			ElementStroke = Color3.fromRGB(210, 210, 210),
 			SecondaryElementStroke = Color3.fromRGB(210, 210, 210),
 
-			SliderBackground = Color3.fromRGB(150, 180, 220), -- Softer slider background for light theme
+			SliderBackground = Color3.fromRGB(150, 180, 220),
 			SliderProgress = Color3.fromRGB(100, 150, 200), 
 			SliderStroke = Color3.fromRGB(120, 170, 220),
 
-			ToggleBackground = Color3.fromRGB(220, 220, 220), -- Light toggle background
+			ToggleBackground = Color3.fromRGB(220, 220, 220),
 			ToggleEnabled = Color3.fromRGB(0, 146, 214),
 			ToggleDisabled = Color3.fromRGB(150, 150, 150),
 			ToggleEnabledStroke = Color3.fromRGB(0, 170, 255),
@@ -180,7 +181,7 @@ local RayfieldLibrary = {
 			ToggleEnabledOuterStroke = Color3.fromRGB(100, 100, 100),
 			ToggleDisabledOuterStroke = Color3.fromRGB(180, 180, 180),
 
-			DropdownSelected = Color3.fromRGB(230, 230, 230), -- Lighten to match theme
+			DropdownSelected = Color3.fromRGB(230, 230, 230),
 			DropdownUnselected = Color3.fromRGB(220, 220, 220),
 
 			InputBackground = Color3.fromRGB(240, 240, 240),
@@ -191,8 +192,8 @@ local RayfieldLibrary = {
 		Amethyst = {
 			TextColor = Color3.fromRGB(240, 240, 240),
 
-			Background = Color3.fromRGB(30, 20, 40), -- Deep purple
-			Topbar = Color3.fromRGB(40, 25, 50), -- Slightly lighter for the topbar
+			Background = Color3.fromRGB(30, 20, 40),
+			Topbar = Color3.fromRGB(40, 25, 50),
 			Shadow = Color3.fromRGB(20, 15, 30),
 
 			NotificationBackground = Color3.fromRGB(35, 20, 40),
@@ -200,9 +201,9 @@ local RayfieldLibrary = {
 
 			TabBackground = Color3.fromRGB(60, 40, 80),
 			TabStroke = Color3.fromRGB(70, 45, 90),
-			TabBackgroundSelected = Color3.fromRGB(180, 140, 200), -- Light purple for selected tabs
+			TabBackgroundSelected = Color3.fromRGB(180, 140, 200),
 			TabTextColor = Color3.fromRGB(230, 230, 240),
-			SelectedTabTextColor = Color3.fromRGB(50, 20, 50), -- Darker for contrast
+			SelectedTabTextColor = Color3.fromRGB(50, 20, 50),
 
 			ElementBackground = Color3.fromRGB(45, 30, 60),
 			ElementBackgroundHover = Color3.fromRGB(50, 35, 70),
@@ -210,8 +211,8 @@ local RayfieldLibrary = {
 			ElementStroke = Color3.fromRGB(70, 50, 85),
 			SecondaryElementStroke = Color3.fromRGB(65, 45, 80),
 
-			SliderBackground = Color3.fromRGB(100, 60, 150), -- Muted purple for slider background
-			SliderProgress = Color3.fromRGB(130, 80, 180), -- Vibrant purple for slider progress
+			SliderBackground = Color3.fromRGB(100, 60, 150),
+			SliderProgress = Color3.fromRGB(130, 80, 180),
 			SliderStroke = Color3.fromRGB(150, 100, 200),
 
 			ToggleBackground = Color3.fromRGB(45, 30, 55),
@@ -231,10 +232,10 @@ local RayfieldLibrary = {
 		},
 
 		Green = {
-			TextColor = Color3.fromRGB(30, 60, 30), -- Deep green for readability
+			TextColor = Color3.fromRGB(30, 60, 30),
 
-			Background = Color3.fromRGB(235, 245, 235), -- Soft green background
-			Topbar = Color3.fromRGB(210, 230, 210), -- Slightly darker for contrast
+			Background = Color3.fromRGB(235, 245, 235),
+			Topbar = Color3.fromRGB(210, 230, 210),
 			Shadow = Color3.fromRGB(200, 220, 200),
 
 			NotificationBackground = Color3.fromRGB(240, 250, 240),
@@ -261,8 +262,8 @@ local RayfieldLibrary = {
 			ToggleDisabled = Color3.fromRGB(150, 175, 150),
 			ToggleEnabledStroke = Color3.fromRGB(80, 150, 80),
 			ToggleDisabledStroke = Color3.fromRGB(130, 150, 130),
-			ToggleEnabledOuterStroke = Color3.fromRGB(100, 160, 100), -- Outer stroke for enabled toggle
-			ToggleDisabledOuterStroke = Color3.fromRGB(160, 180, 160), -- Outer stroke for disabled toggle
+			ToggleEnabledOuterStroke = Color3.fromRGB(100, 160, 100),
+			ToggleDisabledOuterStroke = Color3.fromRGB(160, 180, 160),
 
 			DropdownSelected = Color3.fromRGB(225, 240, 225),
 			DropdownUnselected = Color3.fromRGB(210, 225, 210),
@@ -273,11 +274,11 @@ local RayfieldLibrary = {
 		},
 
 		Bloom = {
-			TextColor = Color3.fromRGB(60, 40, 50), -- Deep, readable pink for contrast
+			TextColor = Color3.fromRGB(60, 40, 50),
 
-			Background = Color3.fromRGB(255, 240, 245), -- Soft pink base
-			Topbar = Color3.fromRGB(250, 220, 225), -- Slightly darker pink for topbar
-			Shadow = Color3.fromRGB(230, 190, 195), -- Subtle, warm shadow
+			Background = Color3.fromRGB(255, 240, 245),
+			Topbar = Color3.fromRGB(250, 220, 225),
+			Shadow = Color3.fromRGB(230, 190, 195),
 
 			NotificationBackground = Color3.fromRGB(255, 235, 240),
 			NotificationActionsBackground = Color3.fromRGB(245, 215, 225),
@@ -315,47 +316,46 @@ local RayfieldLibrary = {
 		},
 
 		DarkBlue = {
-			TextColor = Color3.fromRGB(230, 230, 230), -- Light gray for high contrast on dark backgrounds
+			TextColor = Color3.fromRGB(230, 230, 230),
 
-			Background = Color3.fromRGB(20, 25, 30), -- Very dark blue-gray base
-			Topbar = Color3.fromRGB(30, 35, 40), -- Slightly lighter topbar
-			Shadow = Color3.fromRGB(15, 20, 25), -- Deep shadow for layering effect
+			Background = Color3.fromRGB(20, 25, 30),
+			Topbar = Color3.fromRGB(30, 35, 40),
+			Shadow = Color3.fromRGB(15, 20, 25),
 
 			NotificationBackground = Color3.fromRGB(25, 30, 35),
 			NotificationActionsBackground = Color3.fromRGB(45, 50, 55),
 
 			TabBackground = Color3.fromRGB(35, 40, 45),
-			TabStroke = Color3.fromRGB(45, 50, 60), -- Darkened stroke to match dark theme
-			TabBackgroundSelected = Color3.fromRGB(40, 70, 100), -- Bold blue for selected tab
+			TabStroke = Color3.fromRGB(45, 50, 60),
+			TabBackgroundSelected = Color3.fromRGB(40, 70, 100),
 			TabTextColor = Color3.fromRGB(200, 200, 200),
 			SelectedTabTextColor = Color3.fromRGB(255, 255, 255),
 
 			ElementBackground = Color3.fromRGB(30, 35, 40),
 			ElementBackgroundHover = Color3.fromRGB(40, 45, 50),
 			SecondaryElementBackground = Color3.fromRGB(35, 40, 45), 
-			ElementStroke = Color3.fromRGB(45, 50, 60), -- Deeper, less white stroke
-			SecondaryElementStroke = Color3.fromRGB(40, 45, 55), -- Slightly lighter for subtle contrast
+			ElementStroke = Color3.fromRGB(45, 50, 60),
+			SecondaryElementStroke = Color3.fromRGB(40, 45, 55),
 
 			SliderBackground = Color3.fromRGB(0, 90, 180),
 			SliderProgress = Color3.fromRGB(0, 120, 210),
 			SliderStroke = Color3.fromRGB(0, 150, 240),
 
 			ToggleBackground = Color3.fromRGB(35, 40, 45),
-			ToggleEnabled = Color3.fromRGB(0, 120, 210), -- Bright blue for enabled state
+			ToggleEnabled = Color3.fromRGB(0, 120, 210),
 			ToggleDisabled = Color3.fromRGB(70, 70, 80),
 			ToggleEnabledStroke = Color3.fromRGB(0, 150, 240),
 			ToggleDisabledStroke = Color3.fromRGB(75, 75, 85),
-			ToggleEnabledOuterStroke = Color3.fromRGB(20, 100, 180), -- Darker outer stroke for toggle
+			ToggleEnabledOuterStroke = Color3.fromRGB(20, 100, 180), 
 			ToggleDisabledOuterStroke = Color3.fromRGB(55, 55, 65),
 
-			DropdownSelected = Color3.fromRGB(30, 70, 90), -- Muted blue for dropdown
+			DropdownSelected = Color3.fromRGB(30, 70, 90),
 			DropdownUnselected = Color3.fromRGB(25, 30, 35),
 
 			InputBackground = Color3.fromRGB(25, 30, 35),
-			InputStroke = Color3.fromRGB(45, 50, 60), -- Deepened input stroke
+			InputStroke = Color3.fromRGB(45, 50, 60), 
 			PlaceholderColor = Color3.fromRGB(150, 150, 160)
 		}
-
 	}
 }
 
@@ -376,7 +376,31 @@ if RunService:IsStudio() then
 end
 
 -- Interface Management
+
 local Rayfield = useStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://10804731440")[1]
+local buildAttempts = 0
+local correctBuild = false
+local warned
+
+repeat
+	if Rayfield:FindFirstChild('Build') and Rayfield.Build.Value == InterfaceBuild then
+		correctBuild = true
+		break
+	end
+
+	correctBuild = false
+	
+	if not warned then
+		warn('Rayfield | Build Mismatch')
+		print('Rayfield may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.')
+		warned = true
+	end
+
+	toDestroy, Rayfield = Rayfield, useStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://10804731440")[1]
+	if toDestroy then toDestroy:Destroy() end
+
+	buildAttempts = buildAttempts + 1
+until buildAttempts >= 2
 
 Rayfield.Enabled = false
 
@@ -596,7 +620,7 @@ end
 
 function RayfieldLibrary:Notify(data) -- action e.g open messages
 	task.spawn(function()
-
+		
 		-- Notification Object Creation
 		local newNotification = Notifications.Template:Clone()
 		newNotification.Name = data.Title or 'No Title Provided'
@@ -622,11 +646,13 @@ function RayfieldLibrary:Notify(data) -- action e.g open messages
 		newNotification.Description.TextTransparency = 1
 		newNotification.UIStroke.Transparency = 1
 		newNotification.Shadow.ImageTransparency = 1
-		newNotification.Size = UDim2.new(1, 0, 0.5, 0)
+		newNotification.Size = UDim2.new(1, 0, 0, 800)
 		newNotification.Icon.ImageTransparency = 1
 		newNotification.Icon.BackgroundTransparency = 1
 
 		task.wait()
+
+		newNotification.Visible = true
 
 		if data.Actions then
 			warn('Rayfield | Not seeing your actions in notifications?')
@@ -639,8 +665,6 @@ function RayfieldLibrary:Notify(data) -- action e.g open messages
 
 		newNotification.Icon.Size = UDim2.new(0, 32, 0, 32)
 		newNotification.Icon.Position = UDim2.new(0, 20, 0.5, 0)
-
-		newNotification.Visible = true
 
 		TweenService:Create(newNotification, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, 0, 0, math.max(bounds[1] + bounds[2] + 31, 60))}):Play()
 
@@ -1020,6 +1044,13 @@ local function Minimise()
 end
 
 function RayfieldLibrary:CreateWindow(Settings)
+	if not correctBuild and not Settings.DisableBuildWarnings then
+		task.delay(3, 
+			function() 
+				RayfieldLibrary:Notify({Title = 'Build Mismatch', Content = 'Rayfield may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.', Image = 4335487866})		
+			end)
+	end
+	
 	local Passthrough = false
 	Topbar.Title.Text = Settings.Name
 
@@ -1068,7 +1099,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					Title = "Rayfield Interface",
 					Content = "Enjoying this UI library? Find it at sirius.menu/discord",
 					Duration = 7,
-					Image = 4483362458,
+					Image = 4370033185,
 				})
 			end
 		end)
@@ -1175,6 +1206,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 			local AttemptsRemaining = math.random(2, 5)
 			Rayfield.Enabled = false
 			local KeyUI = useStudio and script.Parent:FindFirstChild('Key') or game:GetObjects("rbxassetid://11380036235")[1]
+			
+			KeyUI.Enabled = true
 			
 			if gethui then
 				KeyUI.Parent = gethui()
@@ -2041,8 +2074,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Dropdown.Toggle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Rotation = 0}):Play()	
 					for _, DropdownOpt in ipairs(Dropdown.List:GetChildren()) do
 						if DropdownOpt.ClassName == "Frame" and DropdownOpt.Name ~= "Placeholder" then
+							if DropdownOpt.Name ~= Dropdown.Selected.Text then
+								TweenService:Create(DropdownOpt.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
+							end
 							TweenService:Create(DropdownOpt, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
-							TweenService:Create(DropdownOpt.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 							TweenService:Create(DropdownOpt.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
 						end
 					end
@@ -2121,8 +2156,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 							TweenService:Create(DropdownOption.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 							TweenService:Create(DropdownOption, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.DropdownSelected}):Play()
 							Debounce = true
-							task.wait(0.2)
-							TweenService:Create(DropdownOption.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 						end
 
 
@@ -2930,7 +2963,7 @@ if useStudio then
 			Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD
 			RememberJoins = true -- Set this to false to make them join the discord every time they load it up
 		},
-		KeySystem = true, -- Set this to true to use our key system
+		KeySystem = false, -- Set this to true to use our key system
 		KeySettings = {
 			Title = "Untitled",
 			Subtitle = "Key System",
@@ -2982,7 +3015,7 @@ if useStudio then
 
 
 
-	RayfieldLibrary:Notify({Title = "Rayfield Interface", Content = "Welcome to Rayfield. These - are the brand new notification design for Rayfield, with custom sizing and Rayfield calculated wait times.", Image = 4483362458})
+	--RayfieldLibrary:Notify({Title = "Rayfield Interface", Content = "Welcome to Rayfield. These - are the brand new notification design for Rayfield, with custom sizing and Rayfield calculated wait times.", Image = 4483362458})
 
 	local Section = Tab:CreateSection("Section Example")
 
