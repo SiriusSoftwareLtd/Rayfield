@@ -3163,8 +3163,6 @@ if useStudio then
 			-- The variable (Value) is a Color3fromRGB value based on which color is selected
 		end
 	})
-	
-	local Divider = Tab:CreateDivider()
 
 	local Slider = Tab:CreateSlider({
 		Name = "Slider Example",
