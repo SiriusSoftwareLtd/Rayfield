@@ -652,30 +652,11 @@ local function LoadConfiguration(Configuration)
 		end
 	end
 	
-	-- iterate thru file method boooo
-	--for FlagName, FlagValue in next, Data do
-	--	if RayfieldLibrary.Flags[FlagName] then
-	--		task.spawn(function() 
-	--			if RayfieldLibrary.Flags[FlagName].Type == "ColorPicker" then
-	--				RayfieldLibrary.Flags[FlagName]:Set(UnpackColor(FlagValue))
-	--			else
-	--				if RayfieldLibrary.Flags[FlagName].CurrentValue or RayfieldLibrary.Flags[FlagName].CurrentKeybind or RayfieldLibrary.Flags[FlagName].CurrentOption or RayfieldLibrary.Flags[FlagName].Color ~= FlagValue then RayfieldLibrary.Flags[FlagName]:Set(FlagValue) end
-	--			end    
-	--		end)
-	--	else
-	--		warn('Rayfield | '.."Unable to find '"..FlagName.. "' in the current script.")
-	--		print('To remove this error after changing the script, you can reset your configuration file by deleting it.')
-	--		RayfieldLibrary:Notify({Title = "Rayfield Flags", Content = "Rayfield was unable to find '"..FlagName.. "' in the current script. Check docs.sirius.menu for help.", Image = 3944688398})
-	--	end
-	--end
-	
 	return changed
 end
 
 local function SaveConfiguration()
 	if not CEnabled then return end
-	
-
 	
 	local Data = {}
 	for i,v in pairs(RayfieldLibrary.Flags) do
@@ -684,7 +665,7 @@ local function SaveConfiguration()
 		else
 			Data[i] = v.CurrentValue or v.CurrentKeybind or v.CurrentOption or v.Color
 		end
-	end	
+	end
 	
 	if useStudio then
 		if script.Parent:FindFirstChild('configuration') then script.Parent.configuration:Destroy() end
@@ -2580,8 +2561,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end)
 
 			Toggle.Interact.MouseButton1Click:Connect(function()
-				if ToggleSettings.CurrentValue then
-					ToggleSettings.CurrentValue = false
+				if ToggleSettings.CurrentValue == 'true' then
+					ToggleSettings.CurrentValue = 'false'
 					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackgroundHover}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 					TweenService:Create(Toggle.Switch.Indicator, TweenInfo.new(0.45, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(1, -40, 0.5, 0)}):Play()
@@ -2591,7 +2572,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()	
 				else
-					ToggleSettings.CurrentValue = true
+					ToggleSettings.CurrentValue = 'true'
 					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackgroundHover}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 					TweenService:Create(Toggle.Switch.Indicator, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(1, -20, 0.5, 0)}):Play()
@@ -2605,6 +2586,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				local Success, Response = pcall(function()
 					ToggleSettings.Callback(ToggleSettings.CurrentValue)
 				end)
+				
 				if not Success then
 					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
@@ -2617,13 +2599,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 				end
 
-
 				SaveConfiguration()
 			end)
 
 			function ToggleSettings:Set(NewToggleValue)
-				if NewToggleValue then
-					ToggleSettings.CurrentValue = true
+				if typeof(NewToggleValue) == 'boolean' then
+					NewToggleValue = tostring(NewToggleValue)
+				end
+				
+				if NewToggleValue == 'true' then
+					ToggleSettings.CurrentValue = 'true'
 					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackgroundHover}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 					TweenService:Create(Toggle.Switch.Indicator, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(1, -20, 0.5, 0)}):Play()
@@ -2637,7 +2622,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()	
 				else
-					ToggleSettings.CurrentValue = false
+					ToggleSettings.CurrentValue = 'false'
 					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackgroundHover}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 					TweenService:Create(Toggle.Switch.Indicator, TweenInfo.new(0.45, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(1, -40, 0.5, 0)}):Play()
@@ -2651,9 +2636,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()	
 				end
+				
 				local Success, Response = pcall(function()
 					ToggleSettings.Callback(ToggleSettings.CurrentValue)
 				end)
+				
 				if not Success then
 					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
@@ -2665,6 +2652,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 				end
+
 				SaveConfiguration()
 			end
 
@@ -3059,7 +3047,7 @@ function RayfieldLibrary:LoadConfiguration()
 	local config
 	
 	if useStudio then
-		config = [[{"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":40,"dawdawd":"","Keybind1":"Q","ColorPicker1awd":{"B":255,"G":255,"R":255},"InputExample":"","Toggle1adwawd":true,"Slider1dawd":40}]]
+		config = [[{"Toggle1adwawd":"true","Keybind1":"Q","InputExample":"","Slider1dawd":40,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","ColorPicker1awd":{"B":255,"G":255,"R":255},"Dropdown1":["Ocean"]}]]
 	end
 	
 	if CEnabled then
@@ -3227,18 +3215,18 @@ if useStudio then
 		table.insert(thoptions, themename)
 	end
 
-	--local Dropdown = Tab:CreateDropdown({
-	--	Name = "Theme",
-	--	Options = thoptions,
-	--	CurrentOption = {"Default"},
-	--	MultipleOptions = false,
-	--	Flag = "Dropdown1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-	--	Callback = function(Options)
-	--		ChangeTheme(Options[1])
-	--		-- The function that takes place when the selected option is changed
-	--		-- The variable (Options) is a table of strings for the current selected options
-	--	end,
-	--})
+	local Dropdown = Tab:CreateDropdown({
+		Name = "Theme",
+		Options = thoptions,
+		CurrentOption = {"Default"},
+		MultipleOptions = false,
+		Flag = "Dropdown1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+		Callback = function(Options)
+			ChangeTheme(Options[1])
+			-- The function that takes place when the selected option is changed
+			-- The variable (Options) is a table of strings for the current selected options
+		end,
+	})
 
 	local Keybind = Tab:CreateKeybind({
 		Name = "Keybind Example",
@@ -3256,7 +3244,6 @@ if useStudio then
 	local Paragraph = Tab:CreateParagraph({Title = "Paragraph Example", Content = "Paragraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph Example"})
 end
 
-RayfieldLibrary:LoadConfiguration()
---task.delay(3, RayfieldLibrary.LoadConfiguration, RayfieldLibrary)
+task.delay(4, RayfieldLibrary.LoadConfiguration, RayfieldLibrary)
 
 return RayfieldLibrary
