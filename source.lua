@@ -11,7 +11,7 @@ iRay  | Programming
 
 
 local InterfaceBuild = 'JNBB'
-local Release = "Build 1.38"
+local Release = "Build 1.39"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -541,7 +541,7 @@ local function ChangeTheme(ThemeName)
 
 	for _, TabPage in ipairs(Elements:GetChildren()) do
 		for _, Element in ipairs(TabPage:GetChildren()) do
-			if Element.ClassName == "Frame" and Element.Name ~= "Placeholder" and Element.Name ~= "SectionSpacing" and Element.Name ~= "SectionTitle" and Element.Name ~= "SearchTitle-fsefsefesfsefesfesfThanks" then
+			if Element.ClassName == "Frame" and Element.Name ~= "Placeholder" and Element.Name ~= "SectionSpacing" and Element.Name ~= "Divider" and Element.Name ~= "SectionTitle" and Element.Name ~= "SearchTitle-fsefsefesfsefesfesfThanks" then
 				Element.BackgroundColor3 = SelectedTheme.ElementBackground
 				Element.UIStroke.Color = SelectedTheme.ElementStroke
 			end
@@ -898,6 +898,8 @@ local function Hide(notify: boolean?)
 					if element.Name ~= "SectionSpacing" and element.Name ~= "Placeholder" then
 						if element.Name == "SectionTitle" or element.Name == 'SearchTitle-fsefsefesfsefesfesfThanks' then
 							TweenService:Create(element.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
+						elseif element.Name == 'Divider' then
+							TweenService:Create(element.Divider, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
 						else
 							TweenService:Create(element, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
 							TweenService:Create(element.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
@@ -941,6 +943,8 @@ local function Maximise()
 					if element.Name ~= "SectionSpacing" and element.Name ~= "Placeholder" then
 						if element.Name == "SectionTitle" or element.Name == 'SearchTitle-fsefsefesfsefesfesfThanks' then
 							TweenService:Create(element.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+						elseif element.Name == 'Divider' then
+							TweenService:Create(element.Divider, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.85}):Play()
 						else
 							TweenService:Create(element, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
 							TweenService:Create(element.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
@@ -1037,6 +1041,8 @@ local function Unhide()
 					if element.Name ~= "SectionSpacing" and element.Name ~= "Placeholder" then
 						if element.Name == "SectionTitle" or element.Name == 'SearchTitle-fsefsefesfsefesfesfThanks' then
 							TweenService:Create(element.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+						elseif element.Name == 'Divider' then
+							TweenService:Create(element.Divider, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.85}):Play()
 						else
 							TweenService:Create(element, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
 							TweenService:Create(element.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
@@ -1084,6 +1090,8 @@ local function Minimise()
 					if element.Name ~= "SectionSpacing" and element.Name ~= "Placeholder" then
 						if element.Name == "SectionTitle" or element.Name == 'SearchTitle-fsefsefesfsefesfesfThanks' then
 							TweenService:Create(element.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
+						elseif element.Name == 'Divider' then
+							TweenService:Create(element.Divider, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
 						else
 							TweenService:Create(element, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
 							TweenService:Create(element.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
@@ -1150,13 +1158,15 @@ function RayfieldLibrary:CreateWindow(Settings)
 	end
 
 	if Settings.Theme then
-		local success = pcall(ChangeTheme, Settings.Theme)
+		local success, result = pcall(ChangeTheme, Settings.Theme)
 		if not success then
-			local success = pcall(ChangeTheme, 'Default')
+			local success, result2 = pcall(ChangeTheme, 'Default')
 			if not success then
 				warn('CRITICAL ERROR - NO DEFAULT THEME')
+				print(result2)
 			end
 			warn('issue rendering theme. no theme on file')
+			print(result)
 		end
 	end
 
@@ -1906,6 +1916,24 @@ function RayfieldLibrary:CreateWindow(Settings)
 			SDone = true
 
 			return SectionValue
+		end
+		
+		-- Divider
+		function Tab:CreateDivider()
+			local DividerValue = {}
+			
+			local Divider = Elements.Template.Divider:Clone()
+			Divider.Visible = true
+			Divider.Parent = TabPage
+
+			Divider.Divider.BackgroundTransparency = 1
+			TweenService:Create(Divider.Divider, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.85}):Play()
+
+			function DividerValue:Set(Value)
+				Divider.Visible = Value
+			end
+
+			return DividerValue
 		end
 
 		-- Label
@@ -2870,9 +2898,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 	function Window.ModifyTheme(NewTheme)
 		local success = pcall(ChangeTheme, NewTheme)
 		if not success then
-			RayfieldLibrary:Notify({Title = 'Unable to Change Theme', Content = 'We are unable find a theme on file.'})
+			RayfieldLibrary:Notify({Title = 'Unable to Change Theme', Content = 'We are unable find a theme on file.', Image = 4400704299})
 		else
-			RayfieldLibrary:Notify({Title = 'Theme Changed', Content = 'Successfully changed theme to '..NewTheme..'.'})
+			RayfieldLibrary:Notify({Title = 'Theme Changed', Content = 'Successfully changed theme to '..NewTheme..'.', Image = 4483362748})
 		end
 	end
 
@@ -3068,7 +3096,8 @@ if useStudio then
 	local Tab2 = Window:CreateTab("Tab Example 2", 4483362458) -- Title, Image
 
 	local Section = Tab2:CreateSection("Section")
-
+	
+	
 	local ColorPicker = Tab2:CreateColorPicker({
 		Name = "Color Picker",
 		Color = Color3.fromRGB(255,255,255),
@@ -3135,6 +3164,8 @@ if useStudio then
 			-- The variable (Value) is a Color3fromRGB value based on which color is selected
 		end
 	})
+	
+	local Divider = Tab:CreateDivider()
 
 	local Slider = Tab:CreateSlider({
 		Name = "Slider Example",
