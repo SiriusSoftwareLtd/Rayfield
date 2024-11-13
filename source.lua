@@ -3006,15 +3006,22 @@ end
 
 function RayfieldLibrary:LoadConfiguration()
 	if CEnabled then
+		local notified
+		
 		local success, result = pcall(function()
-			if isfile(ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension) then
-				LoadConfiguration(readfile(ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension))
+			if isfile then 
+				if isfile(ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension) then
+					LoadConfiguration(readfile(ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension))
+				end
+			else
+				notified = true
+				RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "We couldn't enable Configuration Saving as you are not using file supported software.", Image = 4384402990})
 			end
 		end)
 		
-		if success then
+		if success and not notified then
 			RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "The configuration file for this script has been loaded from a previous session.", Image = 4384403532})
-		else
+		elseif not notified then
 			warn('Rayfield | '..tostring(result))
 			RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "We've encountered an issue loading your configuration correctly. Check the Developer Console for more information.", Image = 4384402990})
 		end
