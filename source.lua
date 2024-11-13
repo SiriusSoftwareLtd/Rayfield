@@ -3058,7 +3058,7 @@ function RayfieldLibrary:LoadConfiguration()
 		elseif not notified then
 			warn('Rayfield | '..tostring(result))
 			print(result)
-			RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "We've encountered an issue loading your configuration correctly. Check the Developer Console for more information.", Image = 4384402990})
+			RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "We've encountered an issue loading your configuration correctly.\n\nCheck the Developer Console for more information.", Image = 4384402990})
 		end
 	end
 end
