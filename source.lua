@@ -531,6 +531,10 @@ local function ChangeTheme(ThemeName)
 	Main.Search.Search.ImageColor3 = SelectedTheme.TextColor
 	Main.Search.Input.PlaceholderColor3 = SelectedTheme.TextColor
 	Main.Search.UIStroke.Color = SelectedTheme.SecondaryElementStroke
+	
+	if Main:FindFirstChild('Notice') then
+		Main.Notice.BackgroundColor3 = SelectedTheme.Background
+	end
 
 	for _, text in ipairs(Rayfield:GetDescendants()) do
 		if text.Parent.Parent ~= Notifications then
@@ -1136,6 +1140,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	Main.Size = UDim2.new(0, 420, 0, 100)
 	Main.Visible = true
 	Main.BackgroundTransparency = 1
+	Main.Notice.Visible = false
 	Main.Shadow.Image.ImageTransparency = 1
 
 	LoadingFrame.Title.TextTransparency = 1
@@ -3050,7 +3055,7 @@ function RayfieldLibrary:LoadConfiguration()
 	local config
 	
 	if useStudio then
-		config = [[{"Toggle1adwawd":false,"Keybind1":"Q","InputExample":"","Slider1dawd":40,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","ColorPicker1awd":{"B":255,"G":255,"R":255},"Dropdown1":["Ocean"]}]]
+		config = [[{"Toggle1adwawd":"false","Keybind1":"Q","InputExample":"","Slider1dawd":40,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","ColorPicker1awd":{"B":255,"G":255,"R":255},"Dropdown1":["Ocean"]}]]
 	end
 	
 	if CEnabled then
@@ -3154,18 +3159,6 @@ if useStudio then
 		end,
 	})
 
-	local Input2 = Tab:CreateInput({
-		Name = "Input Example",
-		CurrentValue = '',
-		PlaceholderText = "Input Placeholder",
-		Flag = 'dawdawddw',
-		RemoveTextAfterFocusLost = false,
-		Callback = function(Text)
-			-- The function that takes place when the input is changed
-			-- The variable (Text) is a string for the value in the text box
-		end,
-	})
-
 
 	--RayfieldLibrary:Notify({Title = "Rayfield Interface", Content = "Welcome to Rayfield. These - are the brand new notification design for Rayfield, with custom sizing and Rayfield calculated wait times.", Image = 4483362458})
 
@@ -3258,6 +3251,27 @@ if useStudio then
 	local Paragraph = Tab:CreateParagraph({Title = "Paragraph Example", Content = "Paragraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph Example"})
 end
 
-task.delay(4, RayfieldLibrary.LoadConfiguration, RayfieldLibrary)
+if CEnabled then
+	Main.Notice.BackgroundTransparency = 1
+	Main.Notice.Title.TextTransparency = 1
+	Main.Notice.Size = UDim2.new(0, 0, 0, 0)
+	Main.Notice.Position = UDim2.new(0.5, 0, 0, -100)
+	Main.Notice.Visible = true
+	
+	
+	TweenService:Create(Main.Notice, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 280, 0, 35), Position = UDim2.new(0.5, 0, 0, -50), BackgroundTransparency = 0.5}):Play()
+	TweenService:Create(Main.Notice.Title, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {TextTransparency = 0.1}):Play()
+end
+task.delay(4, function() 
+	RayfieldLibrary.LoadConfiguration()
+	if Main.Notice.Visible then 
+		TweenService:Create(Main.Notice, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0, -100), BackgroundTransparency = 1}):Play()
+		TweenService:Create(Main.Notice.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
+		
+		task.wait(0.5)
+		Main.Notice.Visible = false 
+	end
+end)
+
 
 return RayfieldLibrary
