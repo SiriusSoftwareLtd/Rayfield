@@ -11,7 +11,7 @@ iRay  | Programming
 
 
 local InterfaceBuild = 'J2UU'
-local Release = "Build 1.39"
+local Release = "Build 1.41"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -675,6 +675,8 @@ end
 local function SaveConfiguration()
 	if not CEnabled then return end
 	
+
+	
 	local Data = {}
 	for i,v in pairs(RayfieldLibrary.Flags) do
 		if v.Type == "ColorPicker" then
@@ -683,6 +685,22 @@ local function SaveConfiguration()
 			Data[i] = v.CurrentValue or v.CurrentKeybind or v.CurrentOption or v.Color
 		end
 	end	
+	
+	if useStudio then
+		if script.Parent:FindFirstChild('configuration') then script.Parent.configuration:Destroy() end
+		
+		local ScreenGui = Instance.new("ScreenGui")
+		ScreenGui.Parent = script.Parent
+		ScreenGui.Name = 'configuration'
+
+		local TextBox = Instance.new("TextBox")
+		TextBox.Parent = ScreenGui
+		TextBox.Size = UDim2.new(0, 800, 0, 50)
+		TextBox.AnchorPoint = Vector2.new(0.5, 0)
+		TextBox.Position = UDim2.new(0.5, 0, 0, 30)
+		TextBox.Text = HttpService:JSONEncode(Data)
+		TextBox.ClearTextOnFocus = false
+	end
 	
 	if writefile then
 		writefile(ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension, tostring(HttpService:JSONEncode(Data)))
@@ -3038,11 +3056,22 @@ end
 
 
 function RayfieldLibrary:LoadConfiguration()
+	local config
+	
+	if useStudio then
+		config = [[{"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":40,"dawdawd":"","Keybind1":"Q","ColorPicker1awd":{"B":255,"G":255,"R":255},"InputExample":"","Toggle1adwawd":true,"Slider1dawd":40}]]
+	end
+	
 	if CEnabled then
 		local notified
 		local loaded
 		
 		local success, result = pcall(function()
+			if useStudio and config then
+				LoadConfiguration(config)
+				return
+			end
+			
 			if isfile then 
 				if isfile(ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension) then
 					loaded = LoadConfiguration(readfile(ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension))
@@ -3055,9 +3084,8 @@ function RayfieldLibrary:LoadConfiguration()
 		
 		if success and loaded and not notified then
 			RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "The configuration file for this script has been loaded from a previous session.", Image = 4384403532})
-		elseif not notified then
-			warn('Rayfield | '..tostring(result))
-			print(result)
+		elseif not success and not notified then
+			warn('Rayfield Configurations Error | '..tostring(result))
 			RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "We've encountered an issue loading your configuration correctly.\n\nCheck the Developer Console for more information.", Image = 4384402990})
 		end
 	end
@@ -3103,7 +3131,7 @@ if useStudio then
 	local ColorPicker = Tab2:CreateColorPicker({
 		Name = "Color Picker",
 		Color = Color3.fromRGB(255,255,255),
-		Flag = "ColorPicker1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+		Flag = "ColorPicfsefker1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
 		Callback = function(Value)
 			-- The function that takes place every time the color picker is moved/changed
 			-- The variable (Value) is a Color3fromRGB value based on which color is selected
@@ -3116,7 +3144,7 @@ if useStudio then
 		Increment = 10,
 		Suffix = "Bananas",
 		CurrentValue = 40,
-		Flag = "Slider1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+		Flag = "Slidefefsr1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
 		Callback = function(Value)
 			-- The function that takes place when the slider changes
 			-- The variable (Value) is a number which correlates to the value the slider is currently at
@@ -3125,7 +3153,9 @@ if useStudio then
 
 	local Input = Tab2:CreateInput({
 		Name = "Input Example",
+		CurrentValue = '',
 		PlaceholderText = "Input Placeholder",
+		Flag = 'dawdawd',
 		RemoveTextAfterFocusLost = false,
 		Callback = function(Text)
 			-- The function that takes place when the input is changed
@@ -3150,7 +3180,7 @@ if useStudio then
 	local Toggle = Tab:CreateToggle({
 		Name = "Toggle Example",
 		CurrentValue = false,
-		Flag = "Toggle1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+		Flag = "Toggle1adwawd", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
 		Callback = function(Value)
 			-- The function that takes place when the toggle is pressed
 			-- The variable (Value) is a boolean on whether the toggle is true or false
@@ -3160,7 +3190,7 @@ if useStudio then
 	local ColorPicker = Tab:CreateColorPicker({
 		Name = "Color Picker",
 		Color = Color3.fromRGB(255,255,255),
-		Flag = "ColorPicker1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+		Flag = "ColorPicker1awd", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
 		Callback = function(Value)
 			-- The function that takes place every time the color picker is moved/changed
 			-- The variable (Value) is a Color3fromRGB value based on which color is selected
@@ -3173,7 +3203,7 @@ if useStudio then
 		Increment = 10,
 		Suffix = "Bananas",
 		CurrentValue = 40,
-		Flag = "Slider1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+		Flag = "Slider1dawd", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
 		Callback = function(Value)
 			-- The function that takes place when the slider changes
 			-- The variable (Value) is a number which correlates to the value the slider is currently at
@@ -3197,18 +3227,18 @@ if useStudio then
 		table.insert(thoptions, themename)
 	end
 
-	local Dropdown = Tab:CreateDropdown({
-		Name = "Theme",
-		Options = thoptions,
-		CurrentOption = {"Default"},
-		MultipleOptions = false,
-		Flag = "Dropdown1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-		Callback = function(Options)
-			ChangeTheme(Options[1])
-			-- The function that takes place when the selected option is changed
-			-- The variable (Options) is a table of strings for the current selected options
-		end,
-	})
+	--local Dropdown = Tab:CreateDropdown({
+	--	Name = "Theme",
+	--	Options = thoptions,
+	--	CurrentOption = {"Default"},
+	--	MultipleOptions = false,
+	--	Flag = "Dropdown1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	--	Callback = function(Options)
+	--		ChangeTheme(Options[1])
+	--		-- The function that takes place when the selected option is changed
+	--		-- The variable (Options) is a table of strings for the current selected options
+	--	end,
+	--})
 
 	local Keybind = Tab:CreateKeybind({
 		Name = "Keybind Example",
@@ -3226,6 +3256,7 @@ if useStudio then
 	local Paragraph = Tab:CreateParagraph({Title = "Paragraph Example", Content = "Paragraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph Example"})
 end
 
-task.delay(3, RayfieldLibrary.LoadConfiguration, RayfieldLibrary)
+RayfieldLibrary:LoadConfiguration()
+--task.delay(3, RayfieldLibrary.LoadConfiguration, RayfieldLibrary)
 
 return RayfieldLibrary
