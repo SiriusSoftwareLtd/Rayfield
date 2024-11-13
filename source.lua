@@ -10,8 +10,8 @@ iRay  | Programming
 
 
 
-local InterfaceBuild = 'J2UU'
-local Release = "Build 1.41"
+local InterfaceBuild = '9HFN'
+local Release = "Build 1.44"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
