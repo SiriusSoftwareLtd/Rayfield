@@ -10,7 +10,7 @@ iRay  | Programming
 
 
 
-local InterfaceBuild = 'J2UU'
+local InterfaceBuild = 'JNBB'
 local Release = "Build 1.39"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
@@ -485,7 +485,6 @@ end
 
 -- Object Variables
 
-local Camera = workspace.CurrentCamera
 local Main = Rayfield.Main
 local MPrompt = Rayfield:FindFirstChild('Prompt')
 local Topbar = Main.Topbar
