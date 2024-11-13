@@ -10,7 +10,7 @@ iRay  | Programming
 
 
 
-local InterfaceBuild = 'FN83'
+local InterfaceBuild = '9GH1'
 local Release = "Build 1.37"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
