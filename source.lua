@@ -630,7 +630,7 @@ end
 
 local function LoadConfiguration(Configuration)
 	local Data = HttpService:JSONDecode(Configuration)
-	
+	local changed
 	
 	-- Iterate through current UI elements' flags
 	for FlagName, Flag in pairs(RayfieldLibrary.Flags) do
@@ -639,10 +639,12 @@ local function LoadConfiguration(Configuration)
 		if FlagValue then
 			task.spawn(function()
 				if Flag.Type == "ColorPicker" then
+					changed = true
 					Flag:Set(UnpackColor(FlagValue))
 				else
 					if (Flag.CurrentValue or Flag.CurrentKeybind or Flag.CurrentOption or Flag.Color) ~= FlagValue then 
-						Flag:Set(FlagValue) 
+						changed = true
+						Flag:Set(FlagValue) 	
 					end
 				end
 			end)
@@ -668,6 +670,8 @@ local function LoadConfiguration(Configuration)
 	--		RayfieldLibrary:Notify({Title = "Rayfield Flags", Content = "Rayfield was unable to find '"..FlagName.. "' in the current script. Check docs.sirius.menu for help.", Image = 3944688398})
 	--	end
 	--end
+	
+	return changed
 end
 
 local function SaveConfiguration()
@@ -3007,11 +3011,12 @@ end
 function RayfieldLibrary:LoadConfiguration()
 	if CEnabled then
 		local notified
+		local loaded
 		
 		local success, result = pcall(function()
 			if isfile then 
 				if isfile(ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension) then
-					LoadConfiguration(readfile(ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension))
+					loaded = LoadConfiguration(readfile(ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension))
 				end
 			else
 				notified = true
@@ -3019,7 +3024,7 @@ function RayfieldLibrary:LoadConfiguration()
 			end
 		end)
 		
-		if success and not notified then
+		if success and loaded and not notified then
 			RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "The configuration file for this script has been loaded from a previous session.", Image = 4384403532})
 		elseif not notified then
 			warn('Rayfield | '..tostring(result))
