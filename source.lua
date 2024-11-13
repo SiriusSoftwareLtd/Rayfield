@@ -1855,7 +1855,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 			if Settings.ConfigurationSaving then
 				if Settings.ConfigurationSaving.Enabled and ColorPickerSettings.Flag then
-					print('Saving COLORPICKER')
 					RayfieldLibrary.Flags[ColorPickerSettings.Flag] = ColorPickerSettings
 				end
 			end
@@ -2820,7 +2819,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 			
 			if Settings.ConfigurationSaving then
 				if Settings.ConfigurationSaving.Enabled and SliderSettings.Flag then
-					print('Saving SLIDER')
 					RayfieldLibrary.Flags[SliderSettings.Flag] = SliderSettings
 				end
 			end
