@@ -3068,7 +3068,7 @@ function RayfieldLibrary:LoadConfiguration()
 		
 		local success, result = pcall(function()
 			if useStudio and config then
-				LoadConfiguration(config)
+				loaded = LoadConfiguration(config)
 				return
 			end
 			
