@@ -10,8 +10,8 @@ iRay  | Programming
 
 
 
-local InterfaceBuild = '9HFN'
-local Release = "Build 1.44"
+local InterfaceBuild = 'U8B1'
+local Release = "Build 1.48"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -491,7 +491,7 @@ local Topbar = Main.Topbar
 local Elements = Main.Elements
 local LoadingFrame = Main.LoadingFrame
 local TabList = Main.TabList
-local dragBar = Main:FindFirstChild('Drag')
+local dragBar = Rayfield:FindFirstChild('Drag')
 local dragInteract = dragBar and dragBar.Interact or nil
 local dragBarCosmetic = dragBar and dragBar.Drag or nil
 
@@ -552,7 +552,7 @@ local function ChangeTheme(ThemeName)
 	end
 end
 
-local function makeDraggable(object, dragObject, enableTaptic)
+local function makeDraggable(object, dragObject, enableTaptic, tapticOffset)
 	local dragging = false
 	local relative = nil
 
@@ -612,7 +612,15 @@ local function makeDraggable(object, dragObject, enableTaptic)
 	local renderStepped = RunService.RenderStepped:Connect(function()
 		if dragging then
 			local position = UserInputService:GetMouseLocation() + relative + offset
-			object.Position = UDim2.fromOffset(position.X, position.Y)
+			if enableTaptic and tapticOffset then
+				TweenService:Create(object, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Position = UDim2.fromOffset(position.X, position.Y)}):Play()
+				TweenService:Create(dragObject.Parent, TweenInfo.new(0.05, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Position = UDim2.fromOffset(position.X, position.Y + tapticOffset)}):Play()
+			else
+				if dragBar and tapticOffset then
+					dragBar.Position = UDim2.fromOffset(position.X, position.Y + tapticOffset)
+				end
+				object.Position = UDim2.fromOffset(position.X, position.Y)
+			end
 		end
 	end)
 
@@ -621,6 +629,7 @@ local function makeDraggable(object, dragObject, enableTaptic)
 		if renderStepped then renderStepped:Disconnect() end
 	end)
 end
+
 
 local function PackColor(Color)
 	return {R = Color.R * 255, G = Color.G * 255, B = Color.B * 255}
@@ -1211,8 +1220,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 		end
 	end)
 
-	makeDraggable(Main, Topbar)
-	if dragBar then makeDraggable(Main, dragInteract, true) end
+	makeDraggable(Main, Topbar, false, 255)
+	if dragBar then makeDraggable(Main, dragInteract, true, 255) end
 
 	for _, TabButton in ipairs(TabList:GetChildren()) do
 		if TabButton.ClassName == "Frame" and TabButton.Name ~= "Placeholder" then
@@ -3098,7 +3107,7 @@ if useStudio then
 		Theme = 'Default',
 		LoadingSubtitle = "by Sirius",
 		ConfigurationSaving = {
-			Enabled = true,
+			Enabled = false,
 			FolderName = nil, -- Create a custom folder for your hub/game
 			FileName = "Big Hub2"
 		},
@@ -3230,7 +3239,7 @@ if useStudio then
 		MultipleOptions = false,
 		Flag = "Dropdown1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
 		Callback = function(Options)
-			ChangeTheme(Options[1])
+			--ChangeTheme(Options[1])
 			-- The function that takes place when the selected option is changed
 			-- The variable (Options) is a table of strings for the current selected options
 		end,
