@@ -396,8 +396,7 @@ local RayfieldLibrary = {
 			InputBackground = Color3.fromRGB(220, 230, 240),
 			InputStroke = Color3.fromRGB(180, 190, 200),
 			PlaceholderColor = Color3.fromRGB(150, 150, 150)
-		}
-
+		},
 	}
 }
 
@@ -3239,7 +3238,7 @@ if useStudio then
 		MultipleOptions = false,
 		Flag = "Dropdown1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
 		Callback = function(Options)
-			--ChangeTheme(Options[1])
+			Window.ModifyTheme(Options[1])
 			-- The function that takes place when the selected option is changed
 			-- The variable (Options) is a table of strings for the current selected options
 		end,
