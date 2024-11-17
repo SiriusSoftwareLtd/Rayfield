@@ -554,7 +554,7 @@ end
 local function getIcon(name : string)
 	-- full credit to latte softworks :)
 	
-	local iconData = not useStudio and game:HttpGet('https://github.com/latte-soft/lucide-roblox/blob/master/lib/Icons.luau')
+	local iconData = not useStudio and game:HttpGet('https://raw.githubusercontent.com/latte-soft/lucide-roblox/refs/heads/master/lib/Icons.luau')
 	print('Icon Data: '..tostring(iconData))
 	
 	local icons = useStudio and require(script.Parent.icons) or loadstring(iconData)()
