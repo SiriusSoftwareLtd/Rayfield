@@ -555,7 +555,7 @@ local function getIcon(name : string)
 	-- full credit to latte softworks :)
 	
 	local iconData = not useStudio and game:HttpGet('https://github.com/latte-soft/lucide-roblox/blob/master/lib/Icons.luau')
-	local icons = not useStudio and loadstring(iconData)() or require(script.Parent.icons)
+	local icons = useStudio and require(script.Parent.icons) or loadstring(iconData)()
 	
 	name = string.match(string.lower(name), "^%s*(.*)%s*$") :: string
 	local sizedicons = icons['48px']
@@ -2727,6 +2727,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 					Toggle.Switch.Shadow.Visible = false
 				end
 
+				task.wait()
+				
 				if not ToggleSettings.CurrentValue then
 					Toggle.Switch.Indicator.UIStroke.Color = SelectedTheme.ToggleDisabledStroke
 					Toggle.Switch.Indicator.BackgroundColor3 = SelectedTheme.ToggleDisabled
