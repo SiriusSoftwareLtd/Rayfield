@@ -11,7 +11,7 @@ iRay  | Programming
 
 
 local InterfaceBuild = 'U8B1'
-local Release = "Build 1.49"
+local Release = "Build 1.5"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -549,6 +549,39 @@ local function ChangeTheme(ThemeName)
 			end
 		end
 	end
+end
+
+local function getIcon(name : string)
+	-- full credit to latte softworks :)
+	
+	local iconData = not useStudio and game:HttpGet('https://github.com/latte-soft/lucide-roblox/blob/master/lib/Icons.luau')
+	local icons = not useStudio and loadstring(iconData)() or require(script.Parent.icons)
+	
+	name = string.match(string.lower(name), "^%s*(.*)%s*$") :: string
+	local sizedicons = icons['48px']
+
+	local r = sizedicons[name]
+	if not r then
+		error("Lucide Icons: Failed to find icon by the name of \"" .. name .. "\.", 2)
+	end
+
+	local rirs = r[2]
+	local riro = r[3]
+
+	if type(r[1]) ~= "number" or type(rirs) ~= "table" or type(riro) ~= "table" then
+		error("Lucide Icons: Internal error: Invalid auto-generated asset entry")
+	end
+
+	local irs = Vector2.new(rirs[1], rirs[2])
+	local iro = Vector2.new(riro[1], riro[2])
+
+	local asset = {
+		id = r[1],
+		imageRectSize = irs,
+		imageRectOffset = iro,
+	}
+
+	return asset
 end
 
 local function makeDraggable(object, dragObject, enableTaptic, tapticOffset)
@@ -1494,7 +1527,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	-- Tab
 	local FirstTab = false
 	local Window = {}
-	function Window:CreateTab(Name,Image)
+	function Window:CreateTab(Name, Image)
 		local SDone = false
 		local TabButton = TabList.Template:Clone()
 		TabButton.Name = Name
@@ -1504,9 +1537,18 @@ function RayfieldLibrary:CreateWindow(Settings)
 		TabButton.Size = UDim2.new(0, TabButton.Title.TextBounds.X + 30, 0, 30)
 
 		if Image then
+			if typeof(Image) == 'string' then
+				local asset = getIcon(Image)
+				
+				TabButton.Image.Image = 'rbxassetid://'..asset.id
+				TabButton.Image.ImageRectOffset = asset.imageRectOffset
+				TabButton.Image.ImageRectSize = asset.imageRectSize
+			else
+				TabButton.Image.Image = "rbxassetid://"..Image
+			end
+			
 			TabButton.Title.AnchorPoint = Vector2.new(0, 0.5)
 			TabButton.Title.Position = UDim2.new(0, 37, 0.5, 0)
-			TabButton.Image.Image = "rbxassetid://"..Image
 			TabButton.Image.Visible = true
 			TabButton.Title.TextXAlignment = Enum.TextXAlignment.Left
 			TabButton.Size = UDim2.new(0, TabButton.Title.TextBounds.X + 52, 0, 30)
@@ -3127,7 +3169,7 @@ if useStudio then
 		}
 	})
 
-	local Tab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
+	local Tab = Window:CreateTab("Tab Example", 'rewind') -- Title, Image
 	local Tab2 = Window:CreateTab("Tab Example 2", 4483362458) -- Title, Image
 
 	local Section = Tab2:CreateSection("Section")
