@@ -1994,7 +1994,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Section.Parent = TabPage
 
 			Section.Title.TextTransparency = 1
-			TweenService:Create(Section.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+			TweenService:Create(Section.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0.4}):Play()
 
 			function SectionValue:Set(NewSection)
 				Section.Title.Text = NewSection
