@@ -10,8 +10,8 @@ iRay  | Programming
 
 
 
-local InterfaceBuild = 'U8B1'
-local Release = "Build 1.51"
+local InterfaceBuild = 'K7GD'
+local Release = "Build 1.53"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -516,8 +516,12 @@ local Notifications = Rayfield.Notifications
 
 local SelectedTheme = RayfieldLibrary.Theme.Default
 
-local function ChangeTheme(ThemeName)
-	SelectedTheme = RayfieldLibrary.Theme[ThemeName]
+local function ChangeTheme(Theme)
+	if typeof(Theme) == 'string' then
+		SelectedTheme = RayfieldLibrary.Theme[Theme]
+	elseif typeof(Theme) == 'table' then
+		SelectedTheme = Theme
+	end
 
 	Rayfield.Main.BackgroundColor3 = SelectedTheme.Background
 	Rayfield.Main.Topbar.BackgroundColor3 = SelectedTheme.Topbar
@@ -759,7 +763,20 @@ function RayfieldLibrary:Notify(data) -- action e.g open messages
 		-- Set Data
 		newNotification.Title.Text = data.Title or "Unknown Title"
 		newNotification.Description.Text = data.Content or "Unknown Content"
-		newNotification.Icon.Image = "rbxassetid://" .. (data.Image or 0)
+
+		if data.Image then
+			if typeof(data.Image) == 'string' then
+				local asset = getIcon(data.Image)
+
+				newNotification.Icon.Image = 'rbxassetid://'..asset.id
+				newNotification.Icon.ImageRectOffset = asset.imageRectOffset
+				newNotification.Icon.ImageRectSize = asset.imageRectSize
+			else
+				newNotification.Icon.Image = "rbxassetid://" .. (data.Image or 0)
+			end
+		else
+			newNotification.Icon.Image = "rbxassetid://" .. 0
+		end
 
 		-- Set initial transparency values
 
@@ -2007,7 +2024,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		end
 
 		-- Label
-		function Tab:CreateLabel(LabelText)
+		function Tab:CreateLabel(LabelText : string, Icon: number, Color : Color3, IgnoreTheme : boolean)
 			local LabelValue = {}
 
 			local Label = Elements.Template.Label:Clone()
@@ -2015,24 +2032,87 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Label.Visible = true
 			Label.Parent = TabPage
 
-			Label.BackgroundColor3 = SelectedTheme.SecondaryElementBackground
-			Label.UIStroke.Color = SelectedTheme.SecondaryElementStroke
+			Label.BackgroundColor3 = Color or SelectedTheme.SecondaryElementBackground
+			Label.UIStroke.Color = Color or SelectedTheme.SecondaryElementStroke
 
+			if Icon then
+				if typeof(Icon) == 'string' then
+					local asset = getIcon(Icon)
+
+					Label.Icon.Image = 'rbxassetid://'..asset.id
+					Label.Icon.ImageRectOffset = asset.imageRectOffset
+					Label.Icon.ImageRectSize = asset.imageRectSize
+				else
+					Label.Icon.Image = "rbxassetid://" .. (Icon or 0)
+				end
+			else
+				Label.Icon.Image = "rbxassetid://" .. 0
+			end
+
+			if Icon and Label:FindFirstChild('Icon') then
+				Label.Title.Position = UDim2.new(0, 45, 0.5, 0)
+				Label.Title.Size = UDim2.new(1, -100, 0, 14)
+
+				if Icon then
+					if typeof(Icon) == 'string' then
+						local asset = getIcon(Icon)
+
+						Label.Icon.Image = 'rbxassetid://'..asset.id
+						Label.Icon.ImageRectOffset = asset.imageRectOffset
+						Label.Icon.ImageRectSize = asset.imageRectSize
+					else
+						Label.Icon.Image = "rbxassetid://" .. (Icon or 0)
+					end
+				else
+					Label.Icon.Image = "rbxassetid://" .. 0
+				end
+
+				Label.Icon.Visible = true
+			end
+
+			Label.Icon.ImageTransparency = 1
 			Label.BackgroundTransparency = 1
 			Label.UIStroke.Transparency = 1
 			Label.Title.TextTransparency = 1
 
-			TweenService:Create(Label, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
-			TweenService:Create(Label.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
-			TweenService:Create(Label.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()	
+			TweenService:Create(Label, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = Color and 0.8 or 0}):Play()
+			TweenService:Create(Label.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = Color and 0.7 or 0}):Play()
+			TweenService:Create(Label.Icon, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.2}):Play()
+			TweenService:Create(Label.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = Color and 0.2 or 0}):Play()	
 
-			function LabelValue:Set(NewLabel)
+			function LabelValue:Set(NewLabel, Icon, Color)
 				Label.Title.Text = NewLabel
+				
+				if Color then
+					Label.BackgroundColor3 = Color or SelectedTheme.SecondaryElementBackground
+					Label.UIStroke.Color = Color or SelectedTheme.SecondaryElementStroke
+				end
+				
+				if Icon and Label:FindFirstChild('Icon') then
+					Label.Title.Position = UDim2.new(0, 45, 0.5, 0)
+					Label.Title.Size = UDim2.new(1, -100, 0, 14)
+					
+					if Icon then
+						if typeof(Icon) == 'string' then
+							local asset = getIcon(Icon)
+
+							Label.Icon.Image = 'rbxassetid://'..asset.id
+							Label.Icon.ImageRectOffset = asset.imageRectOffset
+							Label.Icon.ImageRectSize = asset.imageRectSize
+						else
+							Label.Icon.Image = "rbxassetid://" .. (Icon or 0)
+						end
+					else
+						Label.Icon.Image = "rbxassetid://" .. 0
+					end
+					
+					Label.Icon.Visible = true
+				end
 			end
 
 			Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
-				Label.BackgroundColor3 = SelectedTheme.SecondaryElementBackground
-				Label.UIStroke.Color = SelectedTheme.SecondaryElementStroke
+				Label.BackgroundColor3 = IgnoreTheme and (Color or Label.BackgroundColor3) or SelectedTheme.SecondaryElementBackground
+				Label.UIStroke.Color = IgnoreTheme and (Color or Label.BackgroundColor3) or SelectedTheme.SecondaryElementStroke
 			end)
 
 			return LabelValue
@@ -2973,7 +3053,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		if not success then
 			RayfieldLibrary:Notify({Title = 'Unable to Change Theme', Content = 'We are unable find a theme on file.', Image = 4400704299})
 		else
-			RayfieldLibrary:Notify({Title = 'Theme Changed', Content = 'Successfully changed theme to '..NewTheme..'.', Image = 4483362748})
+			RayfieldLibrary:Notify({Title = 'Theme Changed', Content = 'Successfully changed theme to '..(typeof(NewTheme) == 'string' and NewTheme or 'Custom Theme')..'.', Image = 4483362748})
 		end
 	end
 
@@ -3287,11 +3367,53 @@ if useStudio then
 		MultipleOptions = false,
 		Flag = "Dropdown1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
 		Callback = function(Options)
-			Window.ModifyTheme(Options[1])
+			--Window.ModifyTheme(Options[1])
 			-- The function that takes place when the selected option is changed
 			-- The variable (Options) is a table of strings for the current selected options
 		end,
 	})
+	
+	
+	--Window.ModifyTheme({
+	--	TextColor = Color3.fromRGB(50, 55, 60),
+	--	Background = Color3.fromRGB(240, 245, 250),
+	--	Topbar = Color3.fromRGB(215, 225, 235),
+	--	Shadow = Color3.fromRGB(200, 210, 220),
+
+	--	NotificationBackground = Color3.fromRGB(210, 220, 230),
+	--	NotificationActionsBackground = Color3.fromRGB(225, 230, 240),
+
+	--	TabBackground = Color3.fromRGB(200, 210, 220),
+	--	TabStroke = Color3.fromRGB(180, 190, 200),
+	--	TabBackgroundSelected = Color3.fromRGB(175, 185, 200),
+	--	TabTextColor = Color3.fromRGB(50, 55, 60),
+	--	SelectedTabTextColor = Color3.fromRGB(30, 35, 40),
+
+	--	ElementBackground = Color3.fromRGB(210, 220, 230),
+	--	ElementBackgroundHover = Color3.fromRGB(220, 230, 240),
+	--	SecondaryElementBackground = Color3.fromRGB(200, 210, 220),
+	--	ElementStroke = Color3.fromRGB(190, 200, 210),
+	--	SecondaryElementStroke = Color3.fromRGB(180, 190, 200),
+
+	--	SliderBackground = Color3.fromRGB(200, 220, 235),  -- Lighter shade
+	--	SliderProgress = Color3.fromRGB(70, 130, 180),
+	--	SliderStroke = Color3.fromRGB(150, 180, 220),
+
+	--	ToggleBackground = Color3.fromRGB(210, 220, 230),
+	--	ToggleEnabled = Color3.fromRGB(70, 160, 210),
+	--	ToggleDisabled = Color3.fromRGB(180, 180, 180),
+	--	ToggleEnabledStroke = Color3.fromRGB(60, 150, 200),
+	--	ToggleDisabledStroke = Color3.fromRGB(140, 140, 140),
+	--	ToggleEnabledOuterStroke = Color3.fromRGB(100, 120, 140),
+	--	ToggleDisabledOuterStroke = Color3.fromRGB(120, 120, 130),
+
+	--	DropdownSelected = Color3.fromRGB(220, 230, 240),
+	--	DropdownUnselected = Color3.fromRGB(200, 210, 220),
+
+	--	InputBackground = Color3.fromRGB(220, 230, 240),
+	--	InputStroke = Color3.fromRGB(180, 190, 200),
+	--	PlaceholderColor = Color3.fromRGB(150, 150, 150)
+	--})
 
 	local Keybind = Tab:CreateKeybind({
 		Name = "Keybind Example",
@@ -3305,6 +3427,8 @@ if useStudio then
 	})
 
 	local Label = Tab:CreateLabel("Label Example")
+	
+	local Label2 = Tab:CreateLabel("Warning", 4483362458, Color3.fromRGB(255, 159, 49),  true)
 
 	local Paragraph = Tab:CreateParagraph({Title = "Paragraph Example", Content = "Paragraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph Example"})
 end
@@ -3320,6 +3444,7 @@ if CEnabled and Main:FindFirstChild('Notice') then
 	TweenService:Create(Main.Notice, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut), {Size = UDim2.new(0, 280, 0, 35), Position = UDim2.new(0.5, 0, 0, -50), BackgroundTransparency = 0.5}):Play()
 	TweenService:Create(Main.Notice.Title, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {TextTransparency = 0.1}):Play()
 end
+
 task.delay(4, function() 
 	RayfieldLibrary.LoadConfiguration()
 	if Main:FindFirstChild('Notice') and Main.Notice.Visible then 
