@@ -11,7 +11,7 @@ iRay  | Programming
 
 
 local InterfaceBuild = 'K7GD'
-local Release = "Build 1.53"
+local Release = "Build 1.54"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -561,7 +561,6 @@ end
 
 local function getIcon(name : string)
 	-- full credit to latte softworks :)
-	
 	local iconData = not useStudio and game:HttpGet('https://raw.githubusercontent.com/latte-soft/lucide-roblox/refs/heads/master/lib/Icons.luau')
 	local icons = useStudio and require(script.Parent.icons) or loadstring(iconData)()
 	
@@ -3445,6 +3444,17 @@ if CEnabled and Main:FindFirstChild('Notice') then
 	TweenService:Create(Main.Notice.Title, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {TextTransparency = 0.1}):Play()
 end
 
+if not useStudio then
+	local success, result = pcall(function()
+		loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/boost.lua'))()
+	end)
+	
+	if not success then
+		print('Error with boost file.')
+		print(result)
+	end
+end
+
 task.delay(4, function() 
 	RayfieldLibrary.LoadConfiguration()
 	if Main:FindFirstChild('Notice') and Main.Notice.Visible then 
@@ -3455,6 +3465,5 @@ task.delay(4, function()
 		Main.Notice.Visible = false 
 	end
 end)
-
 
 return RayfieldLibrary
