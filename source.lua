@@ -1086,7 +1086,12 @@ local function Unhide()
 
 	for _, TopbarButton in ipairs(Topbar:GetChildren()) do
 		if TopbarButton.ClassName == "ImageButton" then
-			TweenService:Create(TopbarButton, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.8}):Play()
+			if TopbarButton.Name == 'Icon' then
+				TweenService:Create(TopbarButton, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0}):Play()
+			else
+				TweenService:Create(TopbarButton, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.8}):Play()
+			end
+			
 		end
 	end
 
@@ -1223,6 +1228,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 	if Settings.LoadingTitle ~= "Rayfield Interface Suite" then
 		LoadingFrame.Version.Text = "Rayfield UI"
+	end
+	
+	if Settings.Icon then
+		Topbar.Icon.Visible = true
+		Topbar.Icon.Image = Settings.Icon
 	end
 
 	if dragBar then
@@ -3176,7 +3186,7 @@ if MPrompt then
 end
 
 for _, TopbarButton in ipairs(Topbar:GetChildren()) do
-	if TopbarButton.ClassName == "ImageButton" then
+	if TopbarButton.ClassName == "ImageButton" and TopbarButton.Name ~= 'Icon' then
 		TopbarButton.MouseEnter:Connect(function()
 			TweenService:Create(TopbarButton, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0}):Play()
 		end)
@@ -3186,7 +3196,6 @@ for _, TopbarButton in ipairs(Topbar:GetChildren()) do
 		end)
 	end
 end
-
 
 function RayfieldLibrary:LoadConfiguration()
 	local config
