@@ -1232,7 +1232,21 @@ function RayfieldLibrary:CreateWindow(Settings)
 	
 	if Settings.Icon then
 		Topbar.Icon.Visible = true
-		Topbar.Icon.Image = Settings.Icon
+		Topbar.Title.Position = UDim2.new(0, 47, 0.5, 0)
+
+		if Settings.Icon then
+			if typeof(Settings.Icon) == 'string' then
+				local asset = getIcon(Settings.Icon)
+
+				Topbar.Icon.Image = 'rbxassetid://'..asset.id
+				Topbar.Icon.ImageRectOffset = asset.imageRectOffset
+				Topbar.Icon.ImageRectSize = asset.imageRectSize
+			else
+				Topbar.Icon.Image = "rbxassetid://" .. (Settings.Icon or 0)
+			end
+		else
+			Topbar.Icon.Image = "rbxassetid://" .. 0
+		end
 	end
 
 	if dragBar then
@@ -3241,6 +3255,7 @@ if useStudio then
 		Name = "Rayfield Example Window",
 		LoadingTitle = "Rayfield Interface Suite",
 		Theme = 'Default',
+		Icon = 4483362458,
 		LoadingSubtitle = "by Sirius",
 		ConfigurationSaving = {
 			Enabled = true,
