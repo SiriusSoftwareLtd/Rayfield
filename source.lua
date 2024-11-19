@@ -1230,7 +1230,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		LoadingFrame.Version.Text = "Rayfield UI"
 	end
 	
-	if Settings.Icon then
+	if Settings.Icon and Settings.Icon ~= 0 and Topbar:FindFirstChild('Icon') then
 		Topbar.Icon.Visible = true
 		Topbar.Title.Position = UDim2.new(0, 47, 0.5, 0)
 
@@ -3255,7 +3255,7 @@ if useStudio then
 		Name = "Rayfield Example Window",
 		LoadingTitle = "Rayfield Interface Suite",
 		Theme = 'Default',
-		Icon = 4483362458,
+		Icon = 0,
 		LoadingSubtitle = "by Sirius",
 		ConfigurationSaving = {
 			Enabled = true,
