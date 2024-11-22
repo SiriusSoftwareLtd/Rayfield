@@ -604,13 +604,13 @@ local function makeDraggable(object, dragObject, enableTaptic, tapticOffset)
 	local function connectFunctions()
 		if dragBar and enableTaptic then
 			dragBar.MouseEnter:Connect(function()
-				if not dragging then
+				if not dragging and not Hidden then
 					TweenService:Create(dragBarCosmetic, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 0.5, Size = UDim2.new(0, 120, 0, 4)}):Play()
 				end
 			end)
 
 			dragBar.MouseLeave:Connect(function()
-				if not dragging then
+				if not dragging and not Hidden then
 					TweenService:Create(dragBarCosmetic, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 0.7, Size = UDim2.new(0, 100, 0, 4)}):Play()
 				end
 			end)
@@ -627,7 +627,7 @@ local function makeDraggable(object, dragObject, enableTaptic, tapticOffset)
 			dragging = true
 
 			relative = object.AbsolutePosition + object.AbsoluteSize * object.AnchorPoint - UserInputService:GetMouseLocation()
-			if enableTaptic then
+			if enableTaptic and not Hidden then
 				TweenService:Create(dragBarCosmetic, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 110, 0, 4), BackgroundTransparency = 0}):Play()
 			end
 		end
@@ -642,14 +642,14 @@ local function makeDraggable(object, dragObject, enableTaptic, tapticOffset)
 
 			connectFunctions()
 
-			if enableTaptic then
+			if enableTaptic and not Hidden then
 				TweenService:Create(dragBarCosmetic, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 100, 0, 4), BackgroundTransparency = 0.7}):Play()
 			end
 		end
 	end)
 
 	local renderStepped = RunService.RenderStepped:Connect(function()
-		if dragging then
+		if dragging and not Hidden then
 			local position = UserInputService:GetMouseLocation() + relative + offset
 			if enableTaptic and tapticOffset then
 				TweenService:Create(object, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Position = UDim2.fromOffset(position.X, position.Y)}):Play()
@@ -3251,6 +3251,7 @@ if useStudio then
 	-- run w/ studio
 	-- Feel free to place your own script here to see how it'd work in Roblox Studio before running it on your execution software.
 
+
 	local Window = RayfieldLibrary:CreateWindow({
 		Name = "Rayfield Example Window",
 		LoadingTitle = "Rayfield Interface Suite",
@@ -3279,7 +3280,7 @@ if useStudio then
 		}
 	})
 
-	local Tab = Window:CreateTab("Tab Example", 'badge-minus') -- Title, Image
+	local Tab = Window:CreateTab("Tab Example", 'key-round') -- Title, Image
 	local Tab2 = Window:CreateTab("Tab Example 2", 4483362458) -- Title, Image
 
 	local Section = Tab2:CreateSection("Section")
