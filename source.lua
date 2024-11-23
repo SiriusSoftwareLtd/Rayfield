@@ -505,7 +505,7 @@ LoadingFrame.Version.Text = Release
 
 -- Variables
 
-local request = (syn and syn.request) or (http and http.request) or http_request
+local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 local CFileName = nil
 local CEnabled = false
 local Minimised = false
@@ -513,6 +513,9 @@ local Hidden = false
 local Debounce = false
 local searchOpen = false
 local Notifications = Rayfield.Notifications
+
+local DRAGBAR_OFFSET = 255
+local DRAGBAR_OFFSET_MOBILE = 150
 
 local SelectedTheme = RayfieldLibrary.Theme.Default
 
@@ -569,7 +572,7 @@ local function getIcon(name : string)
 
 	local r = sizedicons[name]
 	if not r then
-		error("Lucide Icons: Failed to find icon by the name of \"" .. name .. "\.", 2)
+		error("Lucide Icons: Failed to find icon by the name of \"" .. name .. "\"", 2)
 	end
 
 	local rirs = r[2]
@@ -986,7 +989,8 @@ local function Hide(notify: boolean?)
 			end
 		end
 	end
-
+	
+	dragBar.Visible = false -- Ensures that the mouse doesn't change into a hand/pointer when hovering over transparent dragbar
 	task.wait(0.5)
 	Main.Visible = false
 	Debounce = false
@@ -1136,6 +1140,8 @@ local function Unhide()
 		end
 	end
 
+	dragBar.Position = useMobileSizing and UDim2.new(0.5, 0, 0.5, DRAGBAR_OFFSET_MOBILE) or UDim2.new(0.5, 0, 0.5, DRAGBAR_OFFSET)
+	dragBar.Visible = true
 	TweenService:Create(dragBarCosmetic, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 0.5}):Play()
 
 	task.wait(0.5)
@@ -1204,8 +1210,8 @@ end
 
 function RayfieldLibrary:CreateWindow(Settings)
 	if not correctBuild and not Settings.DisableBuildWarnings then
-		task.delay(3, 
-			function() 
+		task.delay(3,
+			function()
 				RayfieldLibrary:Notify({Title = 'Build Mismatch', Content = 'Rayfield may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.\n\nTry rejoining and then run the script twice.', Image = 4335487866, Duration = 15})		
 			end)
 	end
@@ -1302,13 +1308,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 		if Settings.ConfigurationSaving.Enabled then
 			if not isfolder(ConfigurationFolder) then
 				makefolder(ConfigurationFolder)
-			end	
+			end
 		end
 	end)
 
 	
 	makeDraggable(Main, Topbar, false, {255, 150})
-	if dragBar then dragBar.Position = useMobileSizing and UDim2.new(0.5, 0, 0.5, 150) or UDim2.new(0.5, 0, 0.5, 255) makeDraggable(Main, dragInteract, true, {255, 150}) end
+	if dragBar then
+		dragBar.Position = useMobileSizing and UDim2.new(0.5, 0, 0.5, DRAGBAR_OFFSET_MOBILE) or UDim2.new(0.5, 0, 0.5, DRAGBAR_OFFSET)
+		makeDraggable(Main, dragInteract, true, {DRAGBAR_OFFSET, DRAGBAR_OFFSET_MOBILE})
+	end
 
 	for _, TabButton in ipairs(TabList:GetChildren()) do
 		if TabButton.ClassName == "Frame" and TabButton.Name ~= "Placeholder" then
