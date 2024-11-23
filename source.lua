@@ -1320,11 +1320,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 	end
 
 	if Settings.Discord and not useStudio then
-		if not isfolder(RayfieldFolder.."/Discord Invites") then
+		if isfolder and not isfolder(RayfieldFolder.."/Discord Invites") then
 			makefolder(RayfieldFolder.."/Discord Invites")
 		end
 
-		if not isfile(RayfieldFolder.."/Discord Invites".."/"..Settings.Discord.Invite..ConfigurationExtension) then
+		if isfile and not isfile(RayfieldFolder.."/Discord Invites".."/"..Settings.Discord.Invite..ConfigurationExtension) then
 			if request then
 				request({
 					Url = 'http://127.0.0.1:6463/rpc?v=1',
