@@ -505,7 +505,7 @@ LoadingFrame.Version.Text = Release
 
 -- Variables
 
-local request = (syn and syn.request) or (http and http.request) or http_request
+local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 local CFileName = nil
 local CEnabled = false
 local Minimised = false
