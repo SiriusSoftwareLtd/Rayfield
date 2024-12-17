@@ -16,7 +16,33 @@ local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
 
+local HttpService = game:GetService("HttpService")
+local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
+local function getExecutor() 
+	if identifyexecutor then 
+		local e,v = identifyexecutor()
+		return tostring(e) .. "/" .. tostring(v)
+	else
+		return "Unknown"
+	end
+end
+
+if request then
+	local reqBody = {
+		["executor"] = getExecutor(),
+		["interface_build"] = InterfaceBuild,
+		["release"] = Release,
+	}
+
+	pcall(function()
+		request({
+			Url = "https://analytics.sirius.menu/v1/execution",
+			Method = "POST",
+			Body = HttpService:JSONEncode(reqBody)
+		})
+	end)
+end
 
 local RayfieldLibrary = {
 	Flags = {},
@@ -404,7 +430,6 @@ local RayfieldLibrary = {
 -- Services
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
@@ -505,7 +530,6 @@ LoadingFrame.Version.Text = Release
 
 -- Variables
 
-local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 local CFileName = nil
 local CEnabled = false
 local Minimised = false
@@ -1326,19 +1350,21 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 		if isfile and not isfile(RayfieldFolder.."/Discord Invites".."/"..Settings.Discord.Invite..ConfigurationExtension) then
 			if request then
-				request({
-					Url = 'http://127.0.0.1:6463/rpc?v=1',
-					Method = 'POST',
-					Headers = {
-						['Content-Type'] = 'application/json',
-						Origin = 'https://discord.com'
-					},
-					Body = HttpService:JSONEncode({
-						cmd = 'INVITE_BROWSER',
-						nonce = HttpService:GenerateGUID(false),
-						args = {code = Settings.Discord.Invite}
+				pcall(function()
+					request({
+						Url = 'http://127.0.0.1:6463/rpc?v=1',
+						Method = 'POST',
+						Headers = {
+							['Content-Type'] = 'application/json',
+							Origin = 'https://discord.com'
+						},
+						Body = HttpService:JSONEncode({
+							cmd = 'INVITE_BROWSER',
+							nonce = HttpService:GenerateGUID(false),
+							args = {code = Settings.Discord.Invite}
+						})
 					})
-				})
+				end)
 			end
 
 			if Settings.Discord.RememberJoins then -- We do logic this way so if the developer changes this setting, the user still won't be prompted, only new users
@@ -2940,7 +2966,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 						NewValue = math.floor(NewValue / SliderSettings.Increment + 0.5) * (SliderSettings.Increment * 10000000) / 10000000
 						NewValue = math.clamp(NewValue, SliderSettings.Range[1], SliderSettings.Range[2])
-						
+
 						if not SliderSettings.Suffix then
 							Slider.Main.Information.Text = tostring(NewValue)
 						else
@@ -2975,14 +3001,14 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 			function SliderSettings:Set(NewVal)
 				local NewVal = math.clamp(NewVal, SliderSettings.Range[1], SliderSettings.Range[2])
-				
+
 				TweenService:Create(Slider.Main.Progress, TweenInfo.new(0.45, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(0, Slider.Main.AbsoluteSize.X * ((NewVal + SliderSettings.Range[1]) / (SliderSettings.Range[2] - SliderSettings.Range[1])) > 5 and Slider.Main.AbsoluteSize.X * (NewVal / (SliderSettings.Range[2] - SliderSettings.Range[1])) or 5, 1, 0)}):Play()
 				Slider.Main.Information.Text = tostring(NewVal) .. " " .. (SliderSettings.Suffix or "")
-				
+
 				local Success, Response = pcall(function()
 					SliderSettings.Callback(NewVal)
 				end)
-				
+
 				if not Success then
 					TweenService:Create(Slider, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 					TweenService:Create(Slider.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
@@ -2994,7 +3020,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Slider, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
 					TweenService:Create(Slider.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 				end
-				
+
 				SliderSettings.CurrentValue = NewVal
 				SaveConfiguration()
 			end
