@@ -513,6 +513,10 @@ local Hidden = false
 local Debounce = false
 local searchOpen = false
 local Notifications = Rayfield.Notifications
+local hideHotkeyConnection
+
+local DRAGBAR_OFFSET = 255
+local DRAGBAR_OFFSET_MOBILE = 150
 
 local SelectedTheme = RayfieldLibrary.Theme.Default
 
@@ -569,7 +573,7 @@ local function getIcon(name : string)
 
 	local r = sizedicons[name]
 	if not r then
-		error("Lucide Icons: Failed to find icon by the name of \"" .. name .. "\.", 2)
+		error("Lucide Icons: Failed to find icon by the name of \"" .. name .. "\"", 2)
 	end
 
 	local rirs = r[2]
@@ -986,7 +990,8 @@ local function Hide(notify: boolean?)
 			end
 		end
 	end
-
+	
+	dragBar.Visible = false -- Ensures that the mouse doesn't change into a hand/pointer when hovering over transparent dragbar
 	task.wait(0.5)
 	Main.Visible = false
 	Debounce = false
@@ -1136,6 +1141,8 @@ local function Unhide()
 		end
 	end
 
+	dragBar.Position = useMobileSizing and UDim2.new(0.5, 0, 0.5, DRAGBAR_OFFSET_MOBILE) or UDim2.new(0.5, 0, 0.5, DRAGBAR_OFFSET)
+	dragBar.Visible = true
 	TweenService:Create(dragBarCosmetic, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 0.5}):Play()
 
 	task.wait(0.5)
@@ -1204,8 +1211,8 @@ end
 
 function RayfieldLibrary:CreateWindow(Settings)
 	if not correctBuild and not Settings.DisableBuildWarnings then
-		task.delay(3, 
-			function() 
+		task.delay(3,
+			function()
 				RayfieldLibrary:Notify({Title = 'Build Mismatch', Content = 'Rayfield may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.\n\nTry rejoining and then run the script twice.', Image = 4335487866, Duration = 15})		
 			end)
 	end
@@ -1302,13 +1309,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 		if Settings.ConfigurationSaving.Enabled then
 			if not isfolder(ConfigurationFolder) then
 				makefolder(ConfigurationFolder)
-			end	
+			end
 		end
 	end)
 
 
 	makeDraggable(Main, Topbar, false, {255, 150})
-	if dragBar then dragBar.Position = useMobileSizing and UDim2.new(0.5, 0, 0.5, 150) or UDim2.new(0.5, 0, 0.5, 255) makeDraggable(Main, dragInteract, true, {255, 150}) end
+	if dragBar then
+		dragBar.Position = useMobileSizing and UDim2.new(0.5, 0, 0.5, DRAGBAR_OFFSET_MOBILE) or UDim2.new(0.5, 0, 0.5, DRAGBAR_OFFSET)
+		makeDraggable(Main, dragInteract, true, {DRAGBAR_OFFSET, DRAGBAR_OFFSET_MOBILE})
+	end
 
 	for _, TabButton in ipairs(TabList:GetChildren()) do
 		if TabButton.ClassName == "Frame" and TabButton.Name ~= "Placeholder" then
@@ -1508,7 +1518,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 						TweenService:Create(KeyMain.NoteMessage, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
 						TweenService:Create(KeyMain.Hide, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
 						task.wait(0.45)
-						game.Players.LocalPlayer:Kick("No Attempts Remaining")
+						Players.LocalPlayer:Kick("No Attempts Remaining")
 						game:Shutdown()
 					end
 					KeyMain.Input.InputBox.Text = ""
@@ -1788,8 +1798,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 			ColorPicker.HexInput.BackgroundColor3 = SelectedTheme.InputBackground
 			ColorPicker.HexInput.UIStroke.Color = SelectedTheme.InputStroke
 
-			local opened = false 
-			local mouse = game.Players.LocalPlayer:GetMouse()
+			local opened = false
+			local mouse = Players.LocalPlayer:GetMouse()
 			Main.Image = "http://www.roblox.com/asset/?id=11415645739"
 			local mainDragging = false 
 			local sliderDragging = false 
@@ -3110,6 +3120,7 @@ function RayfieldLibrary:IsVisible(): boolean
 end
 
 function RayfieldLibrary:Destroy()
+	hideHotkeyConnection:Disconnect()
 	Rayfield:Destroy()
 end
 
@@ -3126,7 +3137,7 @@ end)
 
 Main.Search.Input:GetPropertyChangedSignal('Text'):Connect(function()
 	if #Main.Search.Input.Text > 0 then
-		if not Elements.UIPageLayout.CurrentPage:FindFirstChild('SearchTitle-fsefsefesfsefesfesfThanks') then 
+		if not Elements.UIPageLayout.CurrentPage:FindFirstChild('SearchTitle-fsefsefesfsefesfesfThanks') then
 			local searchTitle = Elements.Template.SectionTitle:Clone()
 			searchTitle.Parent = Elements.UIPageLayout.CurrentPage
 			searchTitle.Name = 'SearchTitle-fsefsefesfsefesfesfThanks'
@@ -3183,7 +3194,7 @@ Topbar.Hide.MouseButton1Click:Connect(function()
 	setVisibility(Hidden, not useMobileSizing)
 end)
 
-UserInputService.InputBegan:Connect(function(input, processed)
+hideHotkeyConnection = UserInputService.InputBegan:Connect(function(input, processed)
 	if (input.KeyCode == Enum.KeyCode.K and not processed) then
 		if Debounce then return end
 		if Hidden then
