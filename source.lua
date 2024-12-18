@@ -42,13 +42,14 @@ if request then
         ["Executor"] = getExecutor(),
         ["Script"] = {["Interface"]=InterfaceBuild, ["Release"]=Release}
     }
-
-    request({
-        Url = "https://analytics.sirius.menu/v1/report/0193dbf8-7da1-79de-b399-2c0f68b0a9ad",
-        Method = "POST",
-        Body = HttpService:JSONEncode(reqBody),
-        Headers = {["Content-Type"]="application/json"}
-    })
+    pcall(function()
+	request({
+		Url = "https://analytics.sirius.menu/v1/report/0193dbf8-7da1-79de-b399-2c0f68b0a9ad",
+		Method = "POST",
+		Body = HttpService:JSONEncode(reqBody),
+		Headers = {["Content-Type"]="application/json"}
+	})
+    end)
 end
 
 local RayfieldLibrary = {
