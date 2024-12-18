@@ -713,7 +713,7 @@ local function UnpackColor(Color)
 end
 
 local function LoadConfiguration(Configuration)
-	local Data = HttpService:JSONDecode(Configuration)
+	local Data = httpService:JSONDecode(Configuration)
 	local changed
 
 	-- Iterate through current UI elements' flags
