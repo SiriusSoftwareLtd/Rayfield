@@ -17,7 +17,7 @@ local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
 
-local httpService = game:GetService("HttpService")
+local HttpService = game:GetService("HttpService")
 local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
 local function getExecutor() 
@@ -46,7 +46,7 @@ if request then
     request({
         Url = "https://analytics.sirius.menu/v1/report/0193dbf8-7da1-79de-b399-2c0f68b0a9ad",
         Method = "POST",
-        Body = httpService:JSONEncode(reqBody),
+        Body = HttpService:JSONEncode(reqBody),
         Headers = {["Content-Type"]="application/json"}
     })
 end
@@ -713,7 +713,7 @@ local function UnpackColor(Color)
 end
 
 local function LoadConfiguration(Configuration)
-	local Data = httpService:JSONDecode(Configuration)
+	local Data = HttpService:JSONDecode(Configuration)
 	local changed
 
 	-- Iterate through current UI elements' flags
