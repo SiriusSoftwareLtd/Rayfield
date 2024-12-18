@@ -5,13 +5,14 @@ by Sirius
 
 shlex | Designing + Programming
 iRay  | Programming
+Max   | Programming
 
 ]]
 
 
 
-local InterfaceBuild = 'K7GD'
-local Release = "Build 1.54"
+local InterfaceBuild = '1VEX'
+local Release = "Build 1.55"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
