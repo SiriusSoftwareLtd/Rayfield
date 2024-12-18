@@ -17,7 +17,7 @@ local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
 
-local HttpService = game:GetService("HttpService")
+local httpService = game:GetService("HttpService")
 local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
 local function getExecutor() 
