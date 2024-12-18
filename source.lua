@@ -21,28 +21,34 @@ local HttpService = game:GetService("HttpService")
 local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
 local function getExecutor() 
-	if identifyexecutor then 
-		local e,v = identifyexecutor()
-		return tostring(e) .. "/" .. tostring(v)
-	else
-		return "Unknown"
-	end
+    if identifyexecutor then 
+        local e, v = identifyexecutor()
+        if e == nil then
+          e = ""
+        end
+
+        if v == nil then
+          v = ""
+        end
+
+        return {["Name"]=e,["Version"]=v}
+    end
+    
+    return {["Name"]="",["Version"]=""}
 end
 
 if request then
-	local reqBody = {
-		["executor"] = getExecutor(),
-		["interface_build"] = InterfaceBuild,
-		["release"] = Release,
-	}
+    local reqBody = {
+        ["Executor"] = getExecutor(),
+        ["Script"] = {["Interface"]=InterfaceBuild, ["Release"]=Release}
+    }
 
-	pcall(function()
-		request({
-			Url = "https://analytics.sirius.menu/v1/execution",
-			Method = "POST",
-			Body = HttpService:JSONEncode(reqBody)
-		})
-	end)
+    request({
+        Url = "https://analytics.sirius.menu/v1/report/0193dbf8-7da1-79de-b399-2c0f68b0a9ad",
+        Method = "POST",
+        Body = httpService:JSONEncode(reqBody),
+        Headers = {["Content-Type"]="application/json"}
+    })
 end
 
 local RayfieldLibrary = {
