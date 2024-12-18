@@ -518,7 +518,6 @@ if UserInputService.TouchEnabled then
 end
 
 
-
 -- Object Variables
 
 local Main = Rayfield.Main
@@ -538,6 +537,7 @@ Rayfield.DisplayOrder = 100
 LoadingFrame.Version.Text = Release
 
 
+local Icons = useStudio and require(script.Parent.icons) or loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua'))()
 
 -- Variables
 
@@ -595,12 +595,8 @@ local function ChangeTheme(Theme)
 end
 
 local function getIcon(name : string)
-	-- full credit to latte softworks :)
-	local iconData = not useStudio and game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua')
-	local icons = useStudio and require(script.Parent.icons) or loadstring(iconData)()
-
 	name = string.match(string.lower(name), "^%s*(.*)%s*$") :: string
-	local sizedicons = icons['48px']
+	local sizedicons = Icons['48px']
 
 	local r = sizedicons[name]
 	if not r then
