@@ -600,7 +600,7 @@ local function getIcon(name : string)
 
 	local r = sizedicons[name]
 	if not r then
-		error("Lucide Icons: Failed to find icon by the name of \"" .. name .. "\.", 2)
+		error("Lucide Icons: Failed to find icon by the name of \"" .. name .. "\".", 2)
 	end
 
 	local rirs = r[2]
