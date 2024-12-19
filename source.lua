@@ -32,14 +32,16 @@ if request then
     pcall(request, {
         Url = "https://analytics.sirius.menu/v1/report/0193dbf8-7da1-79de-b399-2c0f68b0a9ad",
         Method = "POST",
-        Headers = { ["Content-Type"] = "application/json" }
+        Headers = {
+            ["Content-Type"] = "application/json"
+        },
         Body = HttpService:JSONEncode({
             Executor = getExecutor(),
             Script = {
                 Interface = InterfaceBuild,
                 Release = Release
             }
-        }),
+        })
     })
 end
 
