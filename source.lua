@@ -20,30 +20,8 @@ local ConfigurationExtension = ".rfld"
 local HttpService = game:GetService("HttpService")
 local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
-local function getExecutor() 
-    local name, version
-    if identifyexecutor then 
-        name, version = identifyexecutor()
-    end
-    return { Name = name or "", Version = version or "" }
-end
-
-if request then
-    pcall(request, {
-        Url = "https://analytics.sirius.menu/v1/report/0193dbf8-7da1-79de-b399-2c0f68b0a9ad",
-        Method = "POST",
-        Headers = {
-            ["Content-Type"] = "application/json"
-        },
-        Body = HttpService:JSONEncode({
-            Executor = getExecutor(),
-            Script = {
-                Interface = InterfaceBuild,
-                Release = Release
-            }
-        })
-    })
-end
+local reporter = loadstring(game:HttpGet("https://analytics.sirius.menu/reporter"))()
+reporter.report("0193dbf8-7da1-79de-b399-2c0f68b0a9ad", Release, InterfaceBuild)
 
 local RayfieldLibrary = {
 	Flags = {},
