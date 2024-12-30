@@ -1,4 +1,4 @@
-	--[[
+--[[
 
 	Rayfield Interface Suite
 	by Sirius
@@ -7,7 +7,7 @@
 	iRay  | Programming
 	Max   | Programming
 
-	]]
+]]
 
 
 
