@@ -34,8 +34,8 @@ local request = (syn and syn.request) or (fluxus and fluxus.request) or (http an
 if analytics == nil then
 	local fileFunctionsAvailable = isfile and writefile and readfile
 
-	if fileFunctionsAvailable and isfile('analytics.sirius') then
-		analytics = (readfile('analytics.sirius') == "true")
+	if fileFunctionsAvailable and isfile('analyticsConfiguration.sirius') then
+		analytics = (readfile('analyticsConfiguration.sirius') == "true")
 	else
 		if not fileFunctionsAvailable and not useStudio then
 			warn('Rayfield Interface Suite | Sirius Analytics:\n\n\nAs you don\'t have file functionality with your executor, we are unable to save whether you want to opt in or out to analytics.\nIf you do not want to take part in anonymised usage statistics, let us know in our Discord at sirius.menu/discord and we will manually opt you out.')
@@ -50,7 +50,7 @@ No data is linked to you or your personal activity.]],
 				'Cancel',
 				function(result)
 					if result ~= nil and fileFunctionsAvailable then
-						writefile('analytics.sirius', tostring(result))
+						writefile('analyticsConfiguration.sirius', tostring(result))
 					end
 					analytics = result
 				end
