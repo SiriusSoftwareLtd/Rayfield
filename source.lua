@@ -59,7 +59,7 @@ No data is linked to you or your personal activity.]],
 	end
 end
 
-print('Analytics and Tracking are '..(analytics and 'enabled.' or 'disabled.'))
+print('Sirius Analytics are '..(analytics and 'enabled.' or 'disabled.'))
 
 local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
