@@ -47,7 +47,7 @@ if analytics == nil then
 
 No data is linked to you or your personal activity.]],
 				'Continue',
-				'Don\'t Share',
+				'Cancel',
 				function(result)
 					if result ~= nil and fileFunctionsAvailable then
 						writefile('analytics.sirius', tostring(result))
