@@ -12,16 +12,88 @@ Max   | Programming
 
 
 local InterfaceBuild = '1VEX'
-local Release = "Build 1.55"
+local Release = "Build 1.56"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
 
 local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+
+-- Environment Check
+local useStudio
+
+if RunService:IsStudio() then
+	useStudio = true
+end
+
+local prompt = useStudio and require(script.Parent.prompt) or loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua'))()
+
+if analytics == nil then
+	local fileFunctionsAvailable = isfile and writefile and readfile
+
+	if fileFunctionsAvailable and isfile('analytics.sirius') then
+		analytics = (readfile('analytics.sirius') == "true")
+	else
+		if not fileFunctionsAvailable then
+			warn('Rayfield Interface Suite | Sirius Analytics:\n\n\nAs you don\'t have file functionality with your executor, we are unable to save whether you want to opt in or out to analytics.\nIf you do not want to take part in anonymised usage statistics, let us know in our Discord at sirius.menu/discord and we will manually opt you out.')
+			analytics = true	
+		else
+			prompt.create(
+				'Sirius Analytics',
+            [[Would you like to allow Sirius to collect usage statistics?
+
+No data is linked to you or your personal activity.]],
+				'Share with Sirius',
+				'Don\'t Share',
+				function(result)
+					if result ~= nil and fileFunctionsAvailable then
+						writefile('analytics.sirius', tostring(result))
+					end
+					analytics = result
+				end
+			)
+		end
+
+		repeat task.wait() until analytics ~= nil
+	end
+end
+
+print('Analytics and Tracking are '..(analytics and 'enabled.' or 'disabled.'))
+
 local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
-local reporter = loadstring(game:HttpGet("https://analytics.sirius.menu/reporter"))()
-reporter.report("0193dbf8-7da1-79de-b399-2c0f68b0a9ad", Release, InterfaceBuild)
+local function getExecutor() 
+	if identifyexecutor then 
+		local e, v = identifyexecutor()
+		if e == nil then
+			e = ""
+		end
+
+		if v == nil then
+			v = ""
+		end
+
+		return {["Name"]=e,["Version"]=v}
+	end
+
+	return {["Name"]="",["Version"]=""}
+end
+
+if request and analytics then
+	local reqBody = {
+		["Executor"] = getExecutor(),
+		["Script"] = {["Interface"]=InterfaceBuild, ["Release"]=Release}
+	}
+	pcall(function()
+		request({
+			Url = "https://analytics.sirius.menu/v1/report/0193dbf8-7da1-79de-b399-2c0f68b0a9ad",
+			Method = "POST",
+			Body = HttpService:JSONEncode(reqBody),
+			Headers = {["Content-Type"]="application/json"}
+		})
+	end)
+end
 
 local RayfieldLibrary = {
 	Flags = {},
@@ -409,16 +481,8 @@ local RayfieldLibrary = {
 -- Services
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
-
--- Environment Check
-local useStudio
-
-if RunService:IsStudio() then
-	useStudio = true
-end
 
 -- Interface Management
 
@@ -571,7 +635,7 @@ local function getIcon(name : string)
 
 	local r = sizedicons[name]
 	if not r then
-		error("Lucide Icons: Failed to find icon by the name of \"" .. name .. "\".", 2)
+		error("Lucide Icons: Failed to find icon by the name of \"" .. name .. "\.", 2)
 	end
 
 	local rirs = r[2]
@@ -963,7 +1027,7 @@ local function Hide(notify: boolean?)
 			TweenService:Create(tabbtn.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 		end
 	end
-	
+
 	dragInteract.Visible = false
 
 	for _, tab in ipairs(Elements:GetChildren()) do
@@ -1087,9 +1151,9 @@ local function Unhide()
 	if Minimised then
 		task.spawn(Maximise)
 	end
-	
+
 	dragBar.Position = useMobileSizing and UDim2.new(0.5, 0, 0.5, dragOffsetMobile) or UDim2.new(0.5, 0, 0.5, dragOffset)
-	
+
 	dragInteract.Visible = true
 
 	for _, TopbarButton in ipairs(Topbar:GetChildren()) do
