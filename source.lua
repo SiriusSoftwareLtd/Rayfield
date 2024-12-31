@@ -1379,6 +1379,7 @@ local function createSettings(window)
 					HoldToInteract = false,
 					CallOnChange = true,
 					Callback = function(Value)
+						warn('Got '..Value..' - updating setting table with this value.')
 						setting.Value = Value
 						updateSettings()
 					end,
@@ -2823,7 +2824,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 						SaveConfiguration()
 
 						if KeybindSettings.CallOnChange then
-							KeybindSettings.Callback(NewKeyNoEnum)
+							KeybindSettings.Callback(tostring(NewKeyNoEnum))
 						end
 					end
 				elseif not KeybindSettings.CallOnChange and KeybindSettings.CurrentKeybind ~= nil and (input.KeyCode == Enum.KeyCode[KeybindSettings.CurrentKeybind] and not processed) then -- Test
@@ -2874,6 +2875,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 				KeybindSettings.CurrentKeybind = tostring(NewKeybind)
 				Keybind.KeybindFrame.KeybindBox:ReleaseFocus()
 				SaveConfiguration()
+				
+				if KeybindSettings.CallOnChange then
+					KeybindSettings.Callback(tostring(NewKeybind))
+				end
 			end
 
 			if Settings.ConfigurationSaving then
