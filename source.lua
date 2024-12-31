@@ -22,7 +22,7 @@ local settingsTable = {
 		rayfieldOpen = {Type = 'bind', Value = 'K', Name = 'Rayfield Keybind'},
 	},
 	System = {
-		analytics = {Type = 'toggle', Value = true, Name = 'Anonymised Analytics'},
+		usageStats = {Type = 'toggle', Value = true, Name = 'Anonymised Analytics'},
 	}
 }
 
@@ -91,7 +91,7 @@ end
 
 loadSettings()
 
-if not cachedSettings or not cachedSettings.System or not cachedSettings.System.analytics then
+if not cachedSettings or not cachedSettings.System or not cachedSettings.System.usageStats then
 	local fileFunctionsAvailable = isfile and writefile and readfile
 
 	if not fileFunctionsAvailable and not useStudio then
@@ -99,14 +99,14 @@ if not cachedSettings or not cachedSettings.System or not cachedSettings.System.
 		analytics = true	
 	else
 		prompt.create(
-			'Sirius Analytics',
+			'Help us improve',
 	            [[Would you like to allow Sirius to collect usage statistics?
 
-No data is linked to you or your personal activity.]],
+<font transparency='0.4'>No data is linked to you or your personal activity.</font>]],
 			'Continue',
 			'Cancel',
 			function(result)
-				settingsTable.System.analytics.Value = result
+				settingsTable.System.usageStats.Value = result
 				analytics = result
 			end
 		)
@@ -117,7 +117,7 @@ end
 
 --print('Sirius Analytics are '..tostring(((cachedSettings and cachedSettings.System and cachedSettings.System.analytics and cachedSettings.System.analytics.Value or analytics)) and 'enabled.' or 'disabled.'))
 
-if cachedSettings and cachedSettings.System and cachedSettings.System.analytics and cachedSettings.System.analytics.Value and not useStudio then
+if cachedSettings and cachedSettings.System and cachedSettings.System.usageStats and cachedSettings.System.usageStats.Value and not useStudio then
 	local reporter = loadstring(game:HttpGet("https://analytics.sirius.menu/reporter"))()
 	reporter.report("0193dbf8-7da1-79de-b399-2c0f68b0a9ad", Release, InterfaceBuild)
 end
