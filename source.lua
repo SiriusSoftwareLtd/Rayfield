@@ -1379,7 +1379,6 @@ local function createSettings(window)
 					HoldToInteract = false,
 					CallOnChange = true,
 					Callback = function(Value)
-						warn('Got '..Value..' - updating setting table with this value.')
 						setting.Value = Value
 						updateSettings()
 					end,
