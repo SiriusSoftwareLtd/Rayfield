@@ -12,7 +12,7 @@
 
 
 local InterfaceBuild = '9NBD'
-local Release = "Build 1.64"
+local Release = "Build 1.65"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -22,7 +22,7 @@ local settingsTable = {
 		rayfieldOpen = {Type = 'bind', Value = 'K', Name = 'Rayfield Keybind'},
 	},
 	System = {
-		usageStats = {Type = 'toggle', Value = true, Name = 'Anonymised Analytics'},
+		usageAnalytics = {Type = 'toggle', Value = true, Name = 'Anonymised Analytics'},
 	}
 }
 
@@ -30,11 +30,7 @@ local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 
 -- Environment Check
-local useStudio
-
-if RunService:IsStudio() then
-	useStudio = true
-end
+local useStudio = RunService:IsStudio() or false
 
 local settingsCreated = false
 local cachedSettings
@@ -53,7 +49,7 @@ local function loadSettings()
 	-- for debug in studio
 	if useStudio then
 		file = [[
-		{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"analytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":true,"Callback":null}}}}
+		{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":true,"Callback":null}}}}
 	]]
 	end
 
@@ -91,35 +87,37 @@ end
 
 loadSettings()
 
-if not cachedSettings or not cachedSettings.System or not cachedSettings.System.usageStats then
-	local fileFunctionsAvailable = isfile and writefile and readfile
+--if not cachedSettings or not cachedSettings.System or not cachedSettings.System.usageAnalytics then
+--	local fileFunctionsAvailable = isfile and writefile and readfile
 
-	if not fileFunctionsAvailable and not useStudio then
-		warn('Rayfield Interface Suite | Sirius Analytics:\n\n\nAs you don\'t have file functionality with your executor, we are unable to save whether you want to opt in or out to analytics.\nIf you do not want to take part in anonymised usage statistics, let us know in our Discord at sirius.menu/discord and we will manually opt you out.')
-		analytics = true	
+--	if not fileFunctionsAvailable and not useStudio then
+--		warn('Rayfield Interface Suite | Sirius Analytics:\n\n\nAs you don\'t have file functionality with your executor, we are unable to save whether you want to opt in or out to analytics.\nIf you do not want to take part in anonymised usage statistics, let us know in our Discord at sirius.menu/discord and we will manually opt you out.')
+--		analytics = true	
+--	else
+--		prompt.create(
+--			'Help us improve',
+--	            [[Would you like to allow Sirius to collect usage statistics?
+
+--<font transparency='0.4'>No data is linked to you or your personal activity.</font>]],
+--			'Continue',
+--			'Cancel',
+--			function(result)
+--				settingsTable.System.usageAnalytics.Value = result
+--				analytics = result
+--			end
+--		)
+--	end
+
+--	repeat task.wait() until analytics ~= nil
+--end
+
+if #cachedSettings == 0 or (cachedSettings.System and cachedSettings.System.usageAnalytics and cachedSettings.System.usageAnalytics.Value) then
+	if useStudio then
+		print('Sending analytics')
 	else
-		prompt.create(
-			'Help us improve',
-	            [[Would you like to allow Sirius to collect usage statistics?
-
-<font transparency='0.4'>No data is linked to you or your personal activity.</font>]],
-			'Continue',
-			'Cancel',
-			function(result)
-				settingsTable.System.usageStats.Value = result
-				analytics = result
-			end
-		)
+		local reporter = loadstring(game:HttpGet("https://analytics.sirius.menu/reporter"))()
+		reporter.report("0193dbf8-7da1-79de-b399-2c0f68b0a9ad", Release, InterfaceBuild)
 	end
-
-	repeat task.wait() until analytics ~= nil
-end
-
---print('Sirius Analytics are '..tostring(((cachedSettings and cachedSettings.System and cachedSettings.System.analytics and cachedSettings.System.analytics.Value or analytics)) and 'enabled.' or 'disabled.'))
-
-if cachedSettings and cachedSettings.System and cachedSettings.System.usageStats and cachedSettings.System.usageStats.Value and not useStudio then
-	local reporter = loadstring(game:HttpGet("https://analytics.sirius.menu/reporter"))()
-	reporter.report("0193dbf8-7da1-79de-b399-2c0f68b0a9ad", Release, InterfaceBuild)
 end
 
 local RayfieldLibrary = {
@@ -1327,7 +1325,7 @@ local function createSettings(window)
 		warn('Can\'t create settings as no file-saving functionality is available.')
 		return
 	end
-	
+
 	local newTab = window:CreateTab('Rayfield Settings', 0, true)
 
 	if TabList['Rayfield Settings'] then
@@ -1874,7 +1872,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(OtherTabButton.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
 				end
 			end
-			
+
 			if Elements.UIPageLayout.CurrentPage ~= TabPage then
 				Elements.UIPageLayout:JumpTo(TabPage)
 			end
@@ -2891,7 +2889,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				if not KeybindSettings.Ext then
 					SaveConfiguration()
 				end
-				
+
 				if KeybindSettings.CallOnChange then
 					KeybindSettings.Callback(tostring(NewKeybind))
 				end
