@@ -1370,6 +1370,7 @@ local function createSettings(window)
 					Name = setting.Name,
 					CurrentKeybind = setting.Value,
 					HoldToInteract = false,
+					Ext = true,
 					CallOnChange = true,
 					Callback = function(Value)
 						setting.Value = Value
@@ -1915,7 +1916,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Button.ElementIndicator, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {TextTransparency = 0.9}):Play()
 					TweenService:Create(Button.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 				else
-					SaveConfiguration()
+					if not ButtonSettings.Ext then
+						SaveConfiguration()
+					end
 					TweenService:Create(Button, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackgroundHover}):Play()
 					TweenService:Create(Button.ElementIndicator, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
 					TweenService:Create(Button.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
@@ -2080,7 +2083,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 				pcall(function()ColorPickerSettings.Callback(Color3.fromHSV(h,s,v))end)
 				local r,g,b = math.floor((h*255)+0.5),math.floor((s*255)+0.5),math.floor((v*255)+0.5)
 				ColorPickerSettings.Color = Color3.fromRGB(r,g,b)
-				SaveConfiguration()
+				if not ColorPickerSettings.Ext then
+					SaveConfiguration()
+				end
 			end)
 			--RGB
 			local function rgbBoxes(box,toChange)
@@ -2099,7 +2104,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 				end
 				local r,g,b = math.floor((h*255)+0.5),math.floor((s*255)+0.5),math.floor((v*255)+0.5)
 				ColorPickerSettings.Color = Color3.fromRGB(r,g,b)
-				SaveConfiguration()
+				if not ColorPickerSettings.Ext then
+					SaveConfiguration()
+				end
 			end
 			ColorPicker.RGB.RInput.InputBox.FocusLost:connect(function()
 				rgbBoxes(ColorPicker.RGB.RInput.InputBox,"R")
@@ -2132,7 +2139,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 					ColorPicker.HexInput.InputBox.Text = string.format("#%02X%02X%02X",color.R*0xFF,color.G*0xFF,color.B*0xFF)
 					pcall(function()ColorPickerSettings.Callback(Color3.fromHSV(h,s,v))end)
 					ColorPickerSettings.Color = Color3.fromRGB(r,g,b)
-					SaveConfiguration()
+					if not ColorPickerSettings.Ext then
+						SaveConfiguration()
+					end
 				end
 				if sliderDragging then 
 					local localX = math.clamp(mouse.X-Slider.AbsolutePosition.X,0,Slider.AbsoluteSize.X)
@@ -2150,7 +2159,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 					ColorPicker.HexInput.InputBox.Text = string.format("#%02X%02X%02X",color.R*0xFF,color.G*0xFF,color.B*0xFF)
 					pcall(function()ColorPickerSettings.Callback(Color3.fromHSV(h,s,v))end)
 					ColorPickerSettings.Color = Color3.fromRGB(r,g,b)
-					SaveConfiguration()
+					if not ColorPickerSettings.Ext then
+						SaveConfiguration()
+					end
 				end
 			end)
 
@@ -2413,7 +2424,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 					Input.InputFrame.InputBox.Text = ""
 				end
 
-				SaveConfiguration()
+				if not InputSettings.Ext then
+					SaveConfiguration()
+				end
 			end)
 
 			Input.MouseEnter:Connect(function()
@@ -2430,7 +2443,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 			function InputSettings:Set(text)
 				Input.InputFrame.InputBox.Text = text
-				SaveConfiguration()
+				if not InputSettings.Ext then
+					SaveConfiguration()
+				end
 			end
 
 			if Settings.ConfigurationSaving then
@@ -2660,7 +2675,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 							Dropdown.List.Visible = false
 						end
 						Debounce = false
-						SaveConfiguration()
+						if not DropdownSettings.Ext then
+							SaveConfiguration()
+						end
 					end)
 
 					Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
@@ -2794,7 +2811,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 				CheckingForKey = false
 				if Keybind.KeybindFrame.KeybindBox.Text == nil or "" then
 					Keybind.KeybindFrame.KeybindBox.Text = KeybindSettings.CurrentKeybind
-					SaveConfiguration()
+					if not KeybindSettings.Ext then
+						SaveConfiguration()
+					end
 				end
 			end)
 
@@ -2814,7 +2833,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 						Keybind.KeybindFrame.KeybindBox.Text = tostring(NewKeyNoEnum)
 						KeybindSettings.CurrentKeybind = tostring(NewKeyNoEnum)
 						Keybind.KeybindFrame.KeybindBox:ReleaseFocus()
-						SaveConfiguration()
+						if not KeybindSettings.Ext then
+							SaveConfiguration()
+						end
 
 						if KeybindSettings.CallOnChange then
 							KeybindSettings.Callback(tostring(NewKeyNoEnum))
@@ -2867,7 +2888,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 				Keybind.KeybindFrame.KeybindBox.Text = tostring(NewKeybind)
 				KeybindSettings.CurrentKeybind = tostring(NewKeybind)
 				Keybind.KeybindFrame.KeybindBox:ReleaseFocus()
-				SaveConfiguration()
+				if not KeybindSettings.Ext then
+					SaveConfiguration()
+				end
 				
 				if KeybindSettings.CallOnChange then
 					KeybindSettings.Callback(tostring(NewKeybind))
@@ -3168,7 +3191,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 							end
 
 							SliderSettings.CurrentValue = NewValue
-							SaveConfiguration()
+							if not SliderSettings.Ext then
+								SaveConfiguration()
+							end
 						end
 					else
 						TweenService:Create(Slider.Main.Progress, TweenInfo.new(0.3, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(0, Location - Slider.Main.AbsolutePosition.X > 5 and Location - Slider.Main.AbsolutePosition.X or 5, 1, 0)}):Play()
@@ -3200,7 +3225,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 				end
 
 				SliderSettings.CurrentValue = NewVal
-				SaveConfiguration()
+				if not SliderSettings.Ext then
+					SaveConfiguration()
+				end
 			end
 
 			if Settings.ConfigurationSaving then
