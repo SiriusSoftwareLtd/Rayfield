@@ -12,7 +12,7 @@
 
 
 local InterfaceBuild = '1VEX'
-local Release = "Build 1.63"
+local Release = "Build 1.64"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -53,22 +53,7 @@ local function loadSettings()
 	-- for debug in studio
 	if useStudio then
 		file = [[
-		{
-    		"General": {
-        		"toggleexample": {
-            		"Value": true,
-            		"Type": "toggle",
-            		"Name": "Toggle"
-        		}
-    		},
-    		"System": {
-        		"analytics": {
-           	 	"Value": true,
-          		  	"Type": "toggle",
-        		    "Name": "Anonymised Analytics"
-       			}
-    		}
-		}
+		{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"analytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":true,"Callback":null}}}}
 	]]
 	end
 
@@ -1324,6 +1309,11 @@ local function updateSettings()
 	end)
 
 	if success then
+		if useStudio then
+			if script.Parent['get.val'] then
+				script.Parent['get.val'].Value = encoded
+			end
+		end
 		if writefile then
 			writefile(RayfieldFolder..'/settings'..ConfigurationExtension, encoded)
 		end
@@ -1390,6 +1380,7 @@ local function createSettings(window)
 
 	settingsCreated = true
 	loadSettings()
+	updateSettings()
 end
 
 
