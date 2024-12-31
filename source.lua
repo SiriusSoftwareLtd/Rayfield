@@ -12,10 +12,19 @@
 
 
 local InterfaceBuild = '1VEX'
-local Release = "Build 1.56"
+local Release = "Build 1.6"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
+local settingsTable = {
+	General = {
+		-- if needs be in order just make getSetting(name)
+		rayfieldOpen = {Type = 'bind', Value = 'K', Name = 'Rayfield Keybind'},
+	},
+	System = {
+		analytics = {Type = 'toggle', Value = true, Name = 'Anonymised Analytics'},
+	}
+}
 
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
@@ -27,43 +36,103 @@ if RunService:IsStudio() then
 	useStudio = true
 end
 
+local settingsCreated = false
+local cachedSettings
 local prompt = useStudio and require(script.Parent.prompt) or loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua'))()
 local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
+local function loadSettings()
+	local file = nil
 
-if analytics == nil then
-	local fileFunctionsAvailable = isfile and writefile and readfile
-
-	if fileFunctionsAvailable and isfile('analyticsConfiguration.sirius') then
-		analytics = (readfile('analyticsConfiguration.sirius') == "true")
-	else
-		if not fileFunctionsAvailable and not useStudio then
-			warn('Rayfield Interface Suite | Sirius Analytics:\n\n\nAs you don\'t have file functionality with your executor, we are unable to save whether you want to opt in or out to analytics.\nIf you do not want to take part in anonymised usage statistics, let us know in our Discord at sirius.menu/discord and we will manually opt you out.')
-			analytics = true	
-		else
-			prompt.create(
-				'Sirius Analytics',
-	            [[Would you like to allow Sirius to collect usage statistics?
-
-No data is linked to you or your personal activity.]],
-				'Continue',
-				'Cancel',
-				function(result)
-					if result ~= nil and fileFunctionsAvailable then
-						writefile('analyticsConfiguration.sirius', tostring(result))
-					end
-					analytics = result
-				end
-			)
+	if isfolder and isfolder(RayfieldFolder) then
+		if isfile and isfile(RayfieldFolder..'/settings'..ConfigurationExtension) then
+			file = readfile(RayfieldFolder..'/settings'..ConfigurationExtension)
 		end
+	end
 
-		repeat task.wait() until analytics ~= nil
+	-- for debug in studio
+	if useStudio then
+		file = [[
+		{
+    		"General": {
+        		"toggleexample": {
+            		"Value": true,
+            		"Type": "toggle",
+            		"Name": "Toggle"
+        		}
+    		},
+    		"System": {
+        		"analytics": {
+           	 	"Value": true,
+          		  	"Type": "toggle",
+        		    "Name": "Anonymised Analytics"
+       			}
+    		}
+		}
+	]]
+	end
+
+
+	if file then
+		local success, decodedFile = pcall(function() return HttpService:JSONDecode(file) end)
+		if success then
+			file = decodedFile
+		else
+			file = {}
+		end
+	else
+		file = {}
+	end
+
+
+	if not settingsCreated then 
+		cachedSettings = file
+		return
+	end
+
+	if file ~= {} then
+		for categoryName, settingCategory in pairs(settingsTable) do
+			if file[categoryName] then
+				for settingName, setting in pairs(settingCategory) do
+					if file[categoryName][settingName] then
+						setting.Value = file[categoryName][settingName].Value
+						setting.Element:Set(setting.Value)
+					end
+				end
+			end
+		end
 	end
 end
 
-print('Sirius Analytics are '..(analytics and 'enabled.' or 'disabled.'))
+loadSettings()
 
-if analytics and not useStudio then
+if not cachedSettings or not cachedSettings.System or not cachedSettings.System.analytics then
+	local fileFunctionsAvailable = isfile and writefile and readfile
+
+	if not fileFunctionsAvailable and not useStudio then
+		warn('Rayfield Interface Suite | Sirius Analytics:\n\n\nAs you don\'t have file functionality with your executor, we are unable to save whether you want to opt in or out to analytics.\nIf you do not want to take part in anonymised usage statistics, let us know in our Discord at sirius.menu/discord and we will manually opt you out.')
+		analytics = true	
+	else
+		prompt.create(
+			'Sirius Analytics',
+	            [[Would you like to allow Sirius to collect usage statistics?
+
+No data is linked to you or your personal activity.]],
+			'Continue',
+			'Cancel',
+			function(result)
+				settingsTable.System.analytics.Value = result
+				analytics = result
+			end
+		)
+	end
+
+	repeat task.wait() until analytics ~= nil
+end
+
+--print('Sirius Analytics are '..tostring(((cachedSettings and cachedSettings.System and cachedSettings.System.analytics and cachedSettings.System.analytics.Value or analytics)) and 'enabled.' or 'disabled.'))
+
+if cachedSettings and cachedSettings.System and cachedSettings.System.analytics and cachedSettings.System.analytics.Value and not useStudio then
 	local reporter = loadstring(game:HttpGet("https://analytics.sirius.menu/reporter"))()
 	reporter.report("0193dbf8-7da1-79de-b399-2c0f68b0a9ad", Release, InterfaceBuild)
 end
@@ -966,7 +1035,7 @@ local function Hide(notify: boolean?)
 		if useMobilePrompt then 
 			RayfieldLibrary:Notify({Title = "Interface Hidden", Content = "The interface has been hidden, you can unhide the interface by tapping 'Show Rayfield'.", Duration = 7, Image = 4400697855})
 		else
-			RayfieldLibrary:Notify({Title = "Interface Hidden", Content = "The interface has been hidden, you can unhide the interface by tapping K.", Duration = 7, Image = 4400697855})
+			RayfieldLibrary:Notify({Title = "Interface Hidden", Content = `The interface has been hidden, you can unhide the interface by tapping {settingsTable.General.rayfieldOpen.Value or 'K'}.`, Duration = 7, Image = 4400697855})
 		end
 	end
 
@@ -1247,12 +1316,92 @@ local function Minimise()
 	Debounce = false
 end
 
+local function updateSettings()
+	local encoded
+	local success, err = pcall(function()
+		encoded = HttpService:JSONEncode(settingsTable)
+	end)
+
+	if success then
+		if writefile then
+			writefile(RayfieldFolder..'/settings'..ConfigurationExtension, encoded)
+		end
+	end
+end
+
+local function createSettings(window)
+	if not (writefile and isfile and readfile and isfolder and makefolder) then
+		warn('Can\'t create settings as no file-saving functionality is available.')
+		return
+	end
+	
+	local newTab = window:CreateTab('Rayfield Settings', 0, true)
+
+	if TabList['Rayfield Settings'] then
+		TabList['Rayfield Settings'].LayoutOrder = 1000
+	end
+
+	if Elements['Rayfield Settings'] then
+		Elements['Rayfield Settings'].LayoutOrder = 1000
+	end
+
+	-- Create sections and elements
+	for categoryName, settingCategory in pairs(settingsTable) do
+		newTab:CreateSection(categoryName)
+
+		for _, setting in pairs(settingCategory) do
+			if setting.Type == 'input' then
+				setting.Element = newTab:CreateInput({
+					Name = setting.Name,
+					CurrentValue = setting.Value,
+					PlaceholderText = setting.Placeholder,
+					Ext = true,
+					RemoveTextAfterFocusLost = setting.ClearOnFocus,
+					Callback = function(Value)
+						setting.Value = Value
+						updateSettings()
+					end,
+				})
+			elseif setting.Type == 'toggle' then
+				setting.Element = newTab:CreateToggle({
+					Name = setting.Name,
+					CurrentValue = setting.Value,
+					Ext = true,
+					Callback = function(Value)
+						setting.Value = Value
+						updateSettings()
+					end,
+				})
+			elseif setting.Type == 'bind' then
+				setting.Element = newTab:CreateKeybind({
+					Name = setting.Name,
+					CurrentKeybind = setting.Value,
+					HoldToInteract = false,
+					CallOnChange = true,
+					Callback = function(Value)
+						setting.Value = Value
+						updateSettings()
+					end,
+				})
+			end
+		end
+	end
+
+	settingsCreated = true
+	loadSettings()
+end
+
+
 function RayfieldLibrary:CreateWindow(Settings)
 	if not correctBuild and not Settings.DisableBuildWarnings then
 		task.delay(3, 
 			function() 
 				RayfieldLibrary:Notify({Title = 'Build Mismatch', Content = 'Rayfield may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.\n\nTry rejoining and then run the script twice.', Image = 4335487866, Duration = 15})		
 			end)
+	end
+
+	if isfolder and not isfolder(RayfieldFolder) then
+		makefolder(RayfieldFolder)
 	end
 
 	local Passthrough = false
@@ -1619,7 +1768,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	-- Tab
 	local FirstTab = false
 	local Window = {}
-	function Window:CreateTab(Name, Image)
+	function Window:CreateTab(Name, Image, Ext)
 		local SDone = false
 		local TabButton = TabList.Template:Clone()
 		TabButton.Name = Name
@@ -1628,7 +1777,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		TabButton.Title.TextWrapped = false
 		TabButton.Size = UDim2.new(0, TabButton.Title.TextBounds.X + 30, 0, 30)
 
-		if Image then
+		if Image and Image ~= 0 then
 			if typeof(Image) == 'string' then
 				local asset = getIcon(Image)
 
@@ -1660,7 +1809,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		TabPage.Name = Name
 		TabPage.Visible = true
 
-		TabPage.LayoutOrder = #Elements:GetChildren()
+		TabPage.LayoutOrder = #Elements:GetChildren() or Ext and 10000
 
 		for _, TemplateElement in ipairs(TabPage:GetChildren()) do
 			if TemplateElement.ClassName == "Frame" and TemplateElement.Name ~= "Placeholder" then
@@ -1669,7 +1818,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		end
 
 		TabPage.Parent = Elements
-		if not FirstTab then
+		if not FirstTab and not Ext then
 			Elements.UIPageLayout.Animated = false
 			Elements.UIPageLayout:JumpTo(TabPage)
 			Elements.UIPageLayout.Animated = true
@@ -1690,7 +1839,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 		-- Animate
 		task.wait(0.1)
-		if FirstTab then
+		if FirstTab or Ext then
 			TabButton.BackgroundColor3 = SelectedTheme.TabBackground
 			TabButton.Image.ImageColor3 = SelectedTheme.TabTextColor
 			TabButton.Title.TextColor3 = SelectedTheme.TabTextColor
@@ -1698,7 +1847,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			TweenService:Create(TabButton.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0.2}):Play()
 			TweenService:Create(TabButton.Image, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.2}):Play()
 			TweenService:Create(TabButton.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
-		else
+		elseif not Ext then
 			FirstTab = Name
 			TabButton.BackgroundColor3 = SelectedTheme.TabBackgroundSelected
 			TabButton.Image.ImageColor3 = SelectedTheme.SelectedTabTextColor
@@ -2664,17 +2813,20 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end)
 
 			UserInputService.InputBegan:Connect(function(input, processed)
-
 				if CheckingForKey then
-					if input.KeyCode ~= Enum.KeyCode.Unknown and input.KeyCode ~= Enum.KeyCode.K then
+					if input.KeyCode ~= Enum.KeyCode.Unknown then
 						local SplitMessage = string.split(tostring(input.KeyCode), ".")
 						local NewKeyNoEnum = SplitMessage[3]
 						Keybind.KeybindFrame.KeybindBox.Text = tostring(NewKeyNoEnum)
 						KeybindSettings.CurrentKeybind = tostring(NewKeyNoEnum)
 						Keybind.KeybindFrame.KeybindBox:ReleaseFocus()
 						SaveConfiguration()
+
+						if KeybindSettings.CallOnChange then
+							KeybindSettings.Callback(NewKeyNoEnum)
+						end
 					end
-				elseif KeybindSettings.CurrentKeybind ~= nil and (input.KeyCode == Enum.KeyCode[KeybindSettings.CurrentKeybind] and not processed) then -- Test
+				elseif not KeybindSettings.CallOnChange and KeybindSettings.CurrentKeybind ~= nil and (input.KeyCode == Enum.KeyCode[KeybindSettings.CurrentKeybind] and not processed) then -- Test
 					local Held = true
 					local Connection
 					Connection = input.Changed:Connect(function(prop)
@@ -2820,7 +2972,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 				end
 
-				SaveConfiguration()
+				if not ToggleSettings.Ext then
+					SaveConfiguration()
+				end
 			end)
 
 			function ToggleSettings:Set(NewToggleValue)
@@ -2866,14 +3020,19 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 				end
 
-				SaveConfiguration()
-			end
-
-			if Settings.ConfigurationSaving then
-				if Settings.ConfigurationSaving.Enabled and ToggleSettings.Flag then
-					RayfieldLibrary.Flags[ToggleSettings.Flag] = ToggleSettings
+				if not ToggleSettings.Ext then
+					SaveConfiguration()
 				end
 			end
+
+			if not ToggleSettings.Ext then
+				if Settings.ConfigurationSaving then
+					if Settings.ConfigurationSaving.Enabled and ToggleSettings.Flag then
+						RayfieldLibrary.Flags[ToggleSettings.Flag] = ToggleSettings
+					end
+				end
+			end
+
 
 			Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
 				Toggle.Switch.BackgroundColor3 = SelectedTheme.ToggleBackground
@@ -3134,6 +3293,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		end
 	end
 
+	createSettings(Window)
 	return Window
 end
 
@@ -3232,7 +3392,7 @@ Topbar.Hide.MouseButton1Click:Connect(function()
 end)
 
 hideHotkeyConnection = UserInputService.InputBegan:Connect(function(input, processed)
-	if (input.KeyCode == Enum.KeyCode.K and not processed) then
+	if (input.KeyCode == Enum.KeyCode[settingsTable.General.rayfieldOpen.Value or 'K'] and not processed) then
 		if Debounce then return end
 		if Hidden then
 			Hidden = false
