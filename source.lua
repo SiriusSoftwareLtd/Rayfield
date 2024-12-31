@@ -12,7 +12,7 @@
 
 
 local InterfaceBuild = '1VEX'
-local Release = "Build 1.6"
+local Release = "Build 1.63"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -643,6 +643,7 @@ local function ChangeTheme(Theme)
 	Rayfield.Main.Topbar.ChangeSize.ImageColor3 = SelectedTheme.TextColor
 	Rayfield.Main.Topbar.Hide.ImageColor3 = SelectedTheme.TextColor
 	Rayfield.Main.Topbar.Search.ImageColor3 = SelectedTheme.TextColor
+	Rayfield.Main.Topbar.Settings.ImageColor3 = SelectedTheme.TextColor
 	Rayfield.Main.Topbar.Divider.BackgroundColor3 = SelectedTheme.ElementStroke
 
 	Main.Search.BackgroundColor3 = SelectedTheme.TextColor
@@ -1330,7 +1331,7 @@ local function updateSettings()
 end
 
 local function createSettings(window)
-	if not (writefile and isfile and readfile and isfolder and makefolder) then
+	if not (writefile and isfile and readfile and isfolder and makefolder) and not useStudio then
 		warn('Can\'t create settings as no file-saving functionality is available.')
 		return
 	end
@@ -1802,7 +1803,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		TabButton.Image.ImageTransparency = 1
 		TabButton.UIStroke.Transparency = 1
 
-		TabButton.Visible = true
+		TabButton.Visible = not Ext or false
 
 		-- Create Elements Page
 		local TabPage = Elements.Template:Clone()
@@ -1879,10 +1880,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(OtherTabButton.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
 				end
 			end
+			
 			if Elements.UIPageLayout.CurrentPage ~= TabPage then
 				Elements.UIPageLayout:JumpTo(TabPage)
 			end
-
 		end)
 
 		local Tab = {}
@@ -3265,6 +3266,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	Topbar.CornerRepair.BackgroundTransparency = 1
 	Topbar.Title.TextTransparency = 1
 	Topbar.Search.ImageTransparency = 1
+	Topbar.Settings.ImageTransparency = 1
 	Topbar.ChangeSize.ImageTransparency = 1
 	Topbar.Hide.ImageTransparency = 1
 
@@ -3278,6 +3280,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 	TweenService:Create(Topbar.Title, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
 	task.wait(0.05)
 	TweenService:Create(Topbar.Search, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {ImageTransparency = 0.8}):Play()
+	task.wait(0.05)
+	TweenService:Create(Topbar.Settings, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {ImageTransparency = 0.8}):Play()
 	task.wait(0.05)
 	TweenService:Create(Topbar.ChangeSize, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {ImageTransparency = 0.8}):Play()
 	task.wait(0.05)
@@ -3390,6 +3394,26 @@ Topbar.Search.MouseButton1Click:Connect(function()
 	end)
 end)
 
+Topbar.Settings.MouseButton1Click:Connect(function()
+	task.spawn(function()
+		for _, OtherTabButton in ipairs(TabList:GetChildren()) do
+			if OtherTabButton.Name ~= "Template" and OtherTabButton.ClassName == "Frame" and OtherTabButton ~= TabButton and OtherTabButton.Name ~= "Placeholder" then
+				TweenService:Create(OtherTabButton, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.TabBackground}):Play()
+				TweenService:Create(OtherTabButton.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextColor3 = SelectedTheme.TabTextColor}):Play()
+				TweenService:Create(OtherTabButton.Image, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageColor3 = SelectedTheme.TabTextColor}):Play()
+				TweenService:Create(OtherTabButton, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.7}):Play()
+				TweenService:Create(OtherTabButton.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0.2}):Play()
+				TweenService:Create(OtherTabButton.Image, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.2}):Play()
+				TweenService:Create(OtherTabButton.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
+			end
+		end
+
+		Elements.UIPageLayout:JumpTo(Elements['Rayfield Settings'])
+	end)
+end)
+
+
+
 
 Topbar.Hide.MouseButton1Click:Connect(function()
 	setVisibility(Hidden, not useMobileSizing)
@@ -3434,7 +3458,7 @@ function RayfieldLibrary:LoadConfiguration()
 	local config
 
 	if useStudio then
-		config = [[{"Toggle1adwawd":"false","Keybind1":"Q","InputExample":"","Slider1dawd":120,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","ColorPicker1awd":{"B":255,"G":255,"R":255},"Dropdown1":["Ocean"]}]]
+		config = [[{"Toggle1adwawd":true,"Keybind1":"B","InputExample":"","Slider1dawd":120,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","ColorPicker1awd":{"B":255,"G":255,"R":255},"Dropdown1":["Ocean"]}]]
 	end
 
 	if CEnabled then
