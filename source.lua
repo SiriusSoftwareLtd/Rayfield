@@ -48,7 +48,7 @@ local function loadSettings()
 
 	-- for debug in studio
 	if useStudio then
-		file = [[
+		wfile = [[
 		{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":true,"Callback":null}}}}
 	]]
 	end
@@ -1322,6 +1322,8 @@ end
 
 local function createSettings(window)
 	if not (writefile and isfile and readfile and isfolder and makefolder) and not useStudio then
+		if Topbar['Settings'] then Topbar.Settings.Visible = false end
+		Topbar['Search'].Position = UDim2.new(1, -75, 0.5, 0)
 		warn('Can\'t create settings as no file-saving functionality is available.')
 		return
 	end
