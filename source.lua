@@ -3533,7 +3533,6 @@ function RayfieldLibrary:LoadConfiguration()
 	end
 
 	globalLoaded = true
-	SaveConfiguration()
 end
 
 if useStudio then
