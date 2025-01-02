@@ -12,7 +12,7 @@
 
 
 local InterfaceBuild = '9NBD'
-local Release = "Build 1.66"
+local Release = "Build 1.67"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -22,7 +22,7 @@ local settingsTable = {
 		rayfieldOpen = {Type = 'bind', Value = 'K', Name = 'Rayfield Keybind'},
 		-- buildwarnings
 		-- rayfieldprompts
-		
+
 	},
 	System = {
 		usageAnalytics = {Type = 'toggle', Value = true, Name = 'Anonymised Analytics'},
@@ -51,8 +51,8 @@ local function loadSettings()
 
 	-- for debug in studio
 	if useStudio then
-		wfile = [[
-		{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":true,"Callback":null}}}}
+		file = [[
+		{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":false,"Callback":null}}}}
 	]]
 	end
 
@@ -806,7 +806,7 @@ local function LoadConfiguration(Configuration)
 	return changed
 end
 
-local function SaveConfiguration()
+local function SaveConfiguration(t)
 	if not CEnabled or not globalLoaded then return end
 
 	local Data = {}
@@ -1921,7 +1921,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Button.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 				else
 					if not ButtonSettings.Ext then
-						SaveConfiguration()
+						SaveConfiguration(ButtonSettings.Name..'\n')
 					end
 					TweenService:Create(Button, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackgroundHover}):Play()
 					TweenService:Create(Button.ElementIndicator, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
@@ -2088,7 +2088,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				local r,g,b = math.floor((h*255)+0.5),math.floor((s*255)+0.5),math.floor((v*255)+0.5)
 				ColorPickerSettings.Color = Color3.fromRGB(r,g,b)
 				if not ColorPickerSettings.Ext then
-					SaveConfiguration()
+					SaveConfiguration(ColorPickerSettings.Flag..'\n'..tostring(ColorPickerSettings.Color))
 				end
 			end)
 			--RGB
@@ -2447,6 +2447,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 			function InputSettings:Set(text)
 				Input.InputFrame.InputBox.Text = text
+				InputSettings.CurrentValue = text
 				if not InputSettings.Ext then
 					SaveConfiguration()
 				end
@@ -3488,7 +3489,7 @@ function RayfieldLibrary:LoadConfiguration()
 	local config
 
 	if useStudio then
-		config = [[{"Toggle1adwawd":true,"Keybind1":"B","Input1":"","Slider1dawd":120,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","ColorPicker1awd":{"B":255,"G":255,"R":255},"Dropdown1":["Ocean"]}]]
+		config = [[{"Toggle1adwawd":false,"ColorPicker1awd":{"B":255,"G":255,"R":255},"Slider1dawd":100,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","Input1":"hh","Keybind1":"B","Dropdown1":["Ocean"]}]]
 	end
 
 	if CEnabled then
@@ -3518,8 +3519,9 @@ function RayfieldLibrary:LoadConfiguration()
 			RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "We've encountered an issue loading your configuration correctly.\n\nCheck the Developer Console for more information.", Image = 4384402990})
 		end
 	end
-	
+
 	globalLoaded = true
+	SaveConfiguration()
 end
 
 if useStudio then
