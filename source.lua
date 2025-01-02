@@ -784,7 +784,7 @@ local function LoadConfiguration(Configuration)
 	for FlagName, Flag in pairs(RayfieldLibrary.Flags) do
 		local FlagValue = Data[FlagName]
 
-		if FlagValue then
+		if (typeof(FlagValue) == 'boolean' and FlagValue == false) or FlagValue then
 			task.spawn(function()
 				if Flag.Type == "ColorPicker" then
 					changed = true
@@ -806,8 +806,12 @@ local function LoadConfiguration(Configuration)
 	return changed
 end
 
-local function SaveConfiguration(t)
+local function SaveConfiguration()
 	if not CEnabled or not globalLoaded then return end
+	
+	if debugX then
+		print('Saving')
+	end
 
 	local Data = {}
 	for i, v in pairs(RayfieldLibrary.Flags) do
@@ -840,6 +844,10 @@ local function SaveConfiguration(t)
 		TextBox.Position = UDim2.new(0.5, 0, 0, 30)
 		TextBox.Text = HttpService:JSONEncode(Data)
 		TextBox.ClearTextOnFocus = false
+	end
+	
+	if debugX then
+		warn(HttpService:JSONEncode(Data))
 	end
 
 	if writefile then
@@ -3489,7 +3497,7 @@ function RayfieldLibrary:LoadConfiguration()
 	local config
 
 	if useStudio then
-		config = [[{"Toggle1adwawd":false,"ColorPicker1awd":{"B":255,"G":255,"R":255},"Slider1dawd":100,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","Input1":"hh","Keybind1":"B","Dropdown1":["Ocean"]}]]
+		config = [[{"Toggle1adwawd":true,"ColorPicker1awd":{"B":255,"G":255,"R":255},"Slider1dawd":100,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","Input1":"hh","Keybind1":"B","Dropdown1":["Ocean"]}]]
 	end
 
 	if CEnabled then
