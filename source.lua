@@ -3495,6 +3495,10 @@ end
 
 function RayfieldLibrary:LoadConfiguration()
 	local config
+	
+	if debugX then
+		warn('Loading Configuration')
+	end
 
 	if useStudio then
 		config = [[{"Toggle1adwawd":true,"ColorPicker1awd":{"B":255,"G":255,"R":255},"Slider1dawd":100,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","Input1":"hh","Keybind1":"B","Dropdown1":["Ocean"]}]]
