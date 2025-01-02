@@ -2456,6 +2456,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 			function InputSettings:Set(text)
 				Input.InputFrame.InputBox.Text = text
 				InputSettings.CurrentValue = text
+				
+				local Success, Response = pcall(function()
+					InputSettings.Callback(text)
+				end)
+				
 				if not InputSettings.Ext then
 					SaveConfiguration()
 				end
@@ -3657,7 +3662,7 @@ if useStudio then
 
 	local Input = Tab:CreateInput({
 		Name = "Input Example",
-		CurrentValue = "",
+		CurrentValue = "Helo",
 		PlaceholderText = "Adaptive Input",
 		RemoveTextAfterFocusLost = false,
 		Flag = 'Input1',
