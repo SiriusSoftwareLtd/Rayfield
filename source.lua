@@ -12,7 +12,7 @@
 
 
 local InterfaceBuild = '9NBD'
-local Release = "Build 1.65"
+local Release = "Build 1.66"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -20,6 +20,9 @@ local settingsTable = {
 	General = {
 		-- if needs be in order just make getSetting(name)
 		rayfieldOpen = {Type = 'bind', Value = 'K', Name = 'Rayfield Keybind'},
+		-- buildwarnings
+		-- rayfieldprompts
+		
 	},
 	System = {
 		usageAnalytics = {Type = 'toggle', Value = true, Name = 'Anonymised Analytics'},
@@ -515,6 +518,7 @@ local Rayfield = useStudio and script.Parent:FindFirstChild('Rayfield') or game:
 local buildAttempts = 0
 local correctBuild = false
 local warned
+local globalLoaded
 
 repeat
 	if Rayfield:FindFirstChild('Build') and Rayfield.Build.Value == InterfaceBuild then
@@ -803,7 +807,7 @@ local function LoadConfiguration(Configuration)
 end
 
 local function SaveConfiguration()
-	if not CEnabled then return end
+	if not CEnabled or not globalLoaded then return end
 
 	local Data = {}
 	for i, v in pairs(RayfieldLibrary.Flags) do
@@ -3479,11 +3483,12 @@ for _, TopbarButton in ipairs(Topbar:GetChildren()) do
 	end
 end
 
+
 function RayfieldLibrary:LoadConfiguration()
 	local config
 
 	if useStudio then
-		config = [[{"Toggle1adwawd":true,"Keybind1":"B","InputExample":"","Slider1dawd":120,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","ColorPicker1awd":{"B":255,"G":255,"R":255},"Dropdown1":["Ocean"]}]]
+		config = [[{"Toggle1adwawd":true,"Keybind1":"B","Input1":"","Slider1dawd":120,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","ColorPicker1awd":{"B":255,"G":255,"R":255},"Dropdown1":["Ocean"]}]]
 	end
 
 	if CEnabled then
@@ -3502,7 +3507,7 @@ function RayfieldLibrary:LoadConfiguration()
 				end
 			else
 				notified = true
-				RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "We couldn't enable Configuration Saving as you are not using file supported software.", Image = 4384402990})
+				RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "We couldn't enable Configuration Saving as you are not using software with filesystem support.", Image = 4384402990})
 			end
 		end)
 
@@ -3513,6 +3518,8 @@ function RayfieldLibrary:LoadConfiguration()
 			RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "We've encountered an issue loading your configuration correctly.\n\nCheck the Developer Console for more information.", Image = 4384402990})
 		end
 	end
+	
+	globalLoaded = true
 end
 
 if useStudio then
@@ -3640,7 +3647,7 @@ if useStudio then
 		CurrentValue = "",
 		PlaceholderText = "Adaptive Input",
 		RemoveTextAfterFocusLost = false,
-		Flag = 'InputExample',
+		Flag = 'Input1',
 		Callback = function(Text)
 			-- The function that takes place when the input is changed
 			-- The variable (Text) is a string for the value in the text box
