@@ -11,7 +11,7 @@
 
 
 
-local InterfaceBuild = '9NBD'
+local InterfaceBuild = '3K3W'
 local Release = "Build 1.67"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
@@ -1401,7 +1401,7 @@ end
 
 
 function RayfieldLibrary:CreateWindow(Settings)
-	if Rayfield['Loading'] then
+	if Rayfield:FindFirstChild('Loading') then
 		if getgenv and not getgenv().rayfieldCached then
 			Rayfield.Enabled = true
 			Rayfield.Loading.Visible = true
