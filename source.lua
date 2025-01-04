@@ -2,10 +2,12 @@
 
 	Rayfield Interface Suite
 	by Sirius
-
+        Owners, Developers: 
 	shlex | Designing + Programming
 	iRay  | Programming
 	Max   | Programming
+       Owner of UnknownHub: 
+        CookieCrumble | UnknownHub
 
 ]]
 
@@ -38,129 +40,9 @@ local RunService = game:GetService("RunService")
 local useStudio = RunService:IsStudio() or false
 
 local settingsCreated = false
-local cachedSettings
-local prompt = useStudio and require(script.Parent.prompt) or loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua'))()
+
+
 local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
-
-
-
-local function loadSettings()
-	local file = nil
-
-	if isfolder and isfolder(RayfieldFolder) then
-		if isfile and isfile(RayfieldFolder..'/settings'..ConfigurationExtension) then
-			file = readfile(RayfieldFolder..'/settings'..ConfigurationExtension)
-		end
-	end
-
-	-- for debug in studio
-	if useStudio then
-		file = [[
-		{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":false,"Callback":null}}}}
-	]]
-	end
-
-
-	if file then
-		local success, decodedFile = pcall(function() return HttpService:JSONDecode(file) end)
-		if success then
-			file = decodedFile
-		else
-			file = {}
-		end
-	else
-		file = {}
-	end
-
-
-	if not settingsCreated then 
-		cachedSettings = file
-		return
-	end
-
-	if file ~= {} then
-		for categoryName, settingCategory in pairs(settingsTable) do
-			if file[categoryName] then
-				for settingName, setting in pairs(settingCategory) do
-					if file[categoryName][settingName] then
-						setting.Value = file[categoryName][settingName].Value
-						setting.Element:Set(setting.Value)
-					end
-				end
-			end
-		end
-	end
-end
-
-if debugX then
-	warn('Now Loading Settings Configuration')
-end
-
-loadSettings()
-
-if debugX then
-	warn('Settings Loaded')
-end
-
---if not cachedSettings or not cachedSettings.System or not cachedSettings.System.usageAnalytics then
---	local fileFunctionsAvailable = isfile and writefile and readfile
-
---	if not fileFunctionsAvailable and not useStudio then
---		warn('Rayfield Interface Suite | Sirius Analytics:\n\n\nAs you don\'t have file functionality with your executor, we are unable to save whether you want to opt in or out to analytics.\nIf you do not want to take part in anonymised usage statistics, let us know in our Discord at sirius.menu/discord and we will manually opt you out.')
---		analytics = true	
---	else
---		prompt.create(
---			'Help us improve',
---	            [[Would you like to allow Sirius to collect usage statistics?
-
---<font transparency='0.4'>No data is linked to you or your personal activity.</font>]],
---			'Continue',
---			'Cancel',
---			function(result)
---				settingsTable.System.usageAnalytics.Value = result
---				analytics = result
---			end
---		)
---	end
-
---	repeat task.wait() until analytics ~= nil
---end
-
-if debugX then
-	warn('Querying Settings for Reporter Information')
-end
-
-if #cachedSettings == 0 or (cachedSettings.System and cachedSettings.System.usageAnalytics and cachedSettings.System.usageAnalytics.Value) then
-	if useStudio then
-		print('Sending analytics')
-	else
-		if debugX then
-			warn('Reporting Analytics')
-		end
-		task.spawn(function()
-			local success, reporter = pcall(function()
-				return loadstring(game:HttpGet("https://analytics.sirius.menu/reporter"))()
-			end)
-
-			if success and reporter then
-				pcall(function()
-					reporter.report("0193dbf8-7da1-79de-b399-2c0f68b0a9ad", Release, InterfaceBuild)
-				end)
-			else
-				warn("Failed to load or execute the reporter. \nPlease notify Rayfield developers at sirius.menu/discord.")
-			end
-		end)
-		
-		if debugX then
-			warn('Finished Report')
-		end
-
-	end
-end
-
-if debugX then
-	warn('Moving on to continue initialisation')
-end
 
 local RayfieldLibrary = {
 	Flags = {},
