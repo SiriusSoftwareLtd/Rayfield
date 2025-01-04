@@ -118,8 +118,20 @@ if #cachedSettings == 0 or (cachedSettings.System and cachedSettings.System.usag
 	if useStudio then
 		print('Sending analytics')
 	else
-		local reporter = loadstring(game:HttpGet("https://analytics.sirius.menu/reporter"))()
-		reporter.report("0193dbf8-7da1-79de-b399-2c0f68b0a9ad", Release, InterfaceBuild)
+		task.spawn(function()
+			local success, reporter = pcall(function()
+				return loadstring(game:HttpGet("https://analytics.sirius.menu/reporter"))()
+			end)
+
+			if success and reporter then
+				pcall(function()
+					reporter.report("0193dbf8-7da1-79de-b399-2c0f68b0a9ad", Release, InterfaceBuild)
+				end)
+			else
+				warn("Failed to load or execute the reporter. \nPlease notify Rayfield developers at sirius.menu/discord.")
+			end
+		end)
+
 	end
 end
 
