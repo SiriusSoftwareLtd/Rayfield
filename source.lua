@@ -777,8 +777,10 @@ local function UnpackColor(Color)
 end
 
 local function LoadConfiguration(Configuration)
-	local Data = HttpService:JSONDecode(Configuration)
+	local success, Data = pcall(function() return HttpService:JSONDecode(Configuration) end)
 	local changed
+	
+	if not success then warn('Rayfield had an issue decoding the configuration file, please try delete the file and reopen Rayfield.') return end
 
 	-- Iterate through current UI elements' flags
 	for FlagName, Flag in pairs(RayfieldLibrary.Flags) do
