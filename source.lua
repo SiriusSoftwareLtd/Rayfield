@@ -9,7 +9,9 @@
 
 ]]
 
-
+if debugX then
+	warn('Initialising Rayfield')
+end
 
 local InterfaceBuild = '3K3W'
 local Release = "Build 1.67"
@@ -39,6 +41,8 @@ local settingsCreated = false
 local cachedSettings
 local prompt = useStudio and require(script.Parent.prompt) or loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua'))()
 local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
+
+
 
 local function loadSettings()
 	local file = nil
@@ -88,7 +92,15 @@ local function loadSettings()
 	end
 end
 
+if debugX then
+	warn('Now Loading Settings Configuration')
+end
+
 loadSettings()
+
+if debugX then
+	warn('Settings Loaded')
+end
 
 --if not cachedSettings or not cachedSettings.System or not cachedSettings.System.usageAnalytics then
 --	local fileFunctionsAvailable = isfile and writefile and readfile
@@ -114,10 +126,17 @@ loadSettings()
 --	repeat task.wait() until analytics ~= nil
 --end
 
+if debugX then
+	warn('Querying Settings for Reporter Information')
+end
+
 if #cachedSettings == 0 or (cachedSettings.System and cachedSettings.System.usageAnalytics and cachedSettings.System.usageAnalytics.Value) then
 	if useStudio then
 		print('Sending analytics')
 	else
+		if debugX then
+			warn('Reporting Analytics')
+		end
 		task.spawn(function()
 			local success, reporter = pcall(function()
 				return loadstring(game:HttpGet("https://analytics.sirius.menu/reporter"))()
@@ -131,8 +150,16 @@ if #cachedSettings == 0 or (cachedSettings.System and cachedSettings.System.usag
 				warn("Failed to load or execute the reporter. \nPlease notify Rayfield developers at sirius.menu/discord.")
 			end
 		end)
+		
+		if debugX then
+			warn('Finished Report')
+		end
 
 	end
+end
+
+if debugX then
+	warn('Moving on to continue initialisation')
 end
 
 local RayfieldLibrary = {
