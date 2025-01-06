@@ -3050,6 +3050,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 				end
 
 				local Success, Response = pcall(function()
+					if debugX then warn('Running toggle \''..ToggleSettings.Name..'\' (Interact)') end
+					
 					ToggleSettings.Callback(ToggleSettings.CurrentValue)
 				end)
 
@@ -3098,6 +3100,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 				end
 
 				local Success, Response = pcall(function()
+					if debugX then warn('Running toggle \''..ToggleSettings.Name..'\' (:Set)') end
+					
 					ToggleSettings.Callback(ToggleSettings.CurrentValue)
 				end)
 
