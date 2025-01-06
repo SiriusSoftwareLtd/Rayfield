@@ -140,7 +140,7 @@ if debugX then
 	warn('Querying Settings for Reporter Information')
 end
 
-if #cachedSettings == 0 or (cachedSettings.System and cachedSettings.System.usageAnalytics and cachedSettings.System.usageAnalytics.Value) then
+if cachedSettings and #cachedSettings == 0 or (cachedSettings.System and cachedSettings.System.usageAnalytics and cachedSettings.System.usageAnalytics.Value) then
 	if useStudio then
 		print('Sending analytics')
 	else
