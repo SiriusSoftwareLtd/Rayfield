@@ -140,18 +140,15 @@ if debugX then
 	warn('Querying Settings for Reporter Information')
 end
 
-if cachedSettings and #cachedSettings == 0 or (cachedSettings.System and cachedSettings.System.usageAnalytics and cachedSettings.System.usageAnalytics.Value) then
+local function sendReport()
 	if useStudio then
 		print('Sending analytics')
 	else
-		if debugX then
-			warn('Reporting Analytics')
-		end
+		if debugX then warn('Reporting Analytics') end
 		task.spawn(function()
 			local success, reporter = pcall(function()
 				return loadstring(game:HttpGet("https://analytics.sirius.menu/reporter"))()
 			end)
-
 			if success and reporter then
 				pcall(function()
 					reporter.report("0193dbf8-7da1-79de-b399-2c0f68b0a9ad", Release, InterfaceBuild)
@@ -160,13 +157,17 @@ if cachedSettings and #cachedSettings == 0 or (cachedSettings.System and cachedS
 				warn("Failed to load or execute the reporter. \nPlease notify Rayfield developers at sirius.menu/discord.")
 			end
 		end)
-
-		if debugX then
-			warn('Finished Report')
-		end
-
+		if debugX then warn('Finished Report') end
 	end
 end
+
+if cachedSettings and (#cachedSettings == 0 or (cachedSettings.System and cachedSettings.System.usageAnalytics and cachedSettings.System.usageAnalytics.Value)) then
+	sendReport()
+elseif not cachedSettings then
+	sendReport()
+end
+
+
 
 if debugX then
 	warn('Moving on to continue initialisation')
