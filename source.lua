@@ -22,10 +22,11 @@ local useStudio = RunService:IsStudio() or false
 local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 local HttpService = game:GetService('HttpService')
 
+local InterfaceBuild = '3K3W'
+local Release = "Build 1.72"
+
 local globalSuccess, globalResult = pcall(function()
 
-	local InterfaceBuild = '3K3W'
-	local Release = "Build 1.7"
 	local RayfieldFolder = "Rayfield"
 	local ConfigurationFolder = RayfieldFolder.."/Configurations"
 	local ConfigurationExtension = ".rfld"
@@ -3895,7 +3896,11 @@ if not globalSuccess then
 				error = globalResult or 'No Error',
 				details = 'Couldn\'t create window as Rayfield had an error.',
 				fatal = not windowCreated,
-				time = os.date("!%Y-%m-%dT%H:%M:%SZ") or 'Unknown Error Catch Time'
+				time = os.date("!%Y-%m-%dT%H:%M:%SZ") or 'Unknown Error Catch Time',
+				script = {
+					release = Release or 'No Release',
+					ui_version = InterfaceBuild or 'No UI Build'
+				}
 			})
 		})
 	else
