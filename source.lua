@@ -14,7 +14,7 @@ if debugX then
 end
 
 local InterfaceBuild = '3K3W'
-local Release = "Build 1.67"
+local Release = "Build 1.671"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
