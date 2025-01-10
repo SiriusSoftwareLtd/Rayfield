@@ -1996,7 +1996,7 @@ local globalSuccess, globalResult = pcall(function()
 						TweenService:Create(Button.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 					else
 						if not ButtonSettings.Ext then
-							SaveConfiguration(ButtonSettings.Name..'\n')
+							SaveConfiguration()
 						end
 						TweenService:Create(Button, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackgroundHover}):Play()
 						TweenService:Create(Button.ElementIndicator, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
