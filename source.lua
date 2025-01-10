@@ -13,6 +13,7 @@ if debugX then
 	warn('Initialising Rayfield')
 end
 
+local requestsDisabled = getgenv and getgenv().DISABLE_RAYFIELD_REQUESTS
 local InterfaceBuild = '3K3W'
 local Release = "Build 1.671"
 local RayfieldFolder = "Rayfield"
@@ -136,38 +137,36 @@ end
 --	repeat task.wait() until analytics ~= nil
 --end
 
-if debugX then
-	warn('Querying Settings for Reporter Information')
-end
-
-local function sendReport()
-	if useStudio then
-		print('Sending analytics')
-	else
-		if debugX then warn('Reporting Analytics') end
-		task.spawn(function()
-			local success, reporter = pcall(function()
-				return loadstring(game:HttpGet("https://analytics.sirius.menu/reporter"))()
-			end)
-			if success and reporter then
-				pcall(function()
-					reporter.report("0193dbf8-7da1-79de-b399-2c0f68b0a9ad", Release, InterfaceBuild)
+if not requestsDisabled then
+	if debugX then
+		warn('Querying Settings for Reporter Information')
+	end
+	local function sendReport()
+		if useStudio then
+			print('Sending Analytics')
+		else
+			if debugX then warn('Reporting Analytics') end
+			task.spawn(function()
+				local success, reporter = pcall(function()
+					return loadstring(game:HttpGet("https://analytics.sirius.menu/reporter"))()
 				end)
-			else
-				warn("Failed to load or execute the reporter. \nPlease notify Rayfield developers at sirius.menu/discord.")
-			end
-		end)
-		if debugX then warn('Finished Report') end
+				if success and reporter then
+					pcall(function()
+						reporter.report("0193dbf8-7da1-79de-b399-2c0f68b0a9ad", Release, InterfaceBuild)
+					end)
+				else
+					warn("Failed to load or execute the reporter. \nPlease notify Rayfield developers at sirius.menu/discord.")
+				end
+			end)
+			if debugX then warn('Finished Report') end
+		end
+	end
+	if cachedSettings and (#cachedSettings == 0 or (cachedSettings.System and cachedSettings.System.usageAnalytics and cachedSettings.System.usageAnalytics.Value)) then
+		sendReport()
+	elseif not cachedSettings then
+		sendReport()
 	end
 end
-
-if cachedSettings and (#cachedSettings == 0 or (cachedSettings.System and cachedSettings.System.usageAnalytics and cachedSettings.System.usageAnalytics.Value)) then
-	sendReport()
-elseif not cachedSettings then
-	sendReport()
-end
-
-
 
 if debugX then
 	warn('Moving on to continue initialisation')
@@ -717,7 +716,7 @@ local function getIcon(name : string)
 
 	local r = sizedicons[name]
 	if not r then
-		error("Lucide Icons: Failed to find icon by the name of \"" .. name .. "\.", 2)
+		error(`Lucide Icons: Failed to find icon by the name of "{name}"`, 2)
 	end
 
 	local rirs = r[2]
@@ -3440,6 +3439,7 @@ function RayfieldLibrary:IsVisible(): boolean
 	return not Hidden
 end
 
+local hideHotkeyConnection -- Has to be initialized here since the connection is made later in the script
 function RayfieldLibrary:Destroy()
 	hideHotkeyConnection:Disconnect()
 	Rayfield:Destroy()
@@ -3849,14 +3849,14 @@ if not useStudio then
 	end
 end
 
-task.delay(4, function() 
+task.delay(4, function()
 	RayfieldLibrary.LoadConfiguration()
-	if Main:FindFirstChild('Notice') and Main.Notice.Visible then 
+	if Main:FindFirstChild('Notice') and Main.Notice.Visible then
 		TweenService:Create(Main.Notice, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut), {Size = UDim2.new(0, 100, 0, 25), Position = UDim2.new(0.5, 0, 0, -100), BackgroundTransparency = 1}):Play()
 		TweenService:Create(Main.Notice.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
 
 		task.wait(0.5)
-		Main.Notice.Visible = false 
+		Main.Notice.Visible = false
 	end
 end)
 
