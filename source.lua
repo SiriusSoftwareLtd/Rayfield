@@ -911,6 +911,8 @@ local globalSuccess, globalResult = pcall(function()
 
 	function RayfieldLibrary:Notify(data) -- action e.g open messages
 		task.spawn(function()
+			
+			if Notifications:FindFirstChild('Template') then warn('Couldn\'t find notification template, UI may be on old version.') return end
 
 			-- Notification Object Creation
 			local newNotification = Notifications.Template:Clone()
