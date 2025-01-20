@@ -152,7 +152,7 @@ if not requestsDisabled then
 				end)
 				if success and reporter then
 					pcall(function()
-						reporter.report("0193dbf8-7da1-79de-b399-2c0f68b0a9ad", Release, InterfaceBuild)
+						reporter.reportExecution("Rayfield", Release, InterfaceBuild)
 					end)
 				else
 					warn("Failed to load or execute the reporter. \nPlease notify Rayfield developers at sirius.menu/discord.")
