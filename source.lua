@@ -148,7 +148,7 @@ if not requestsDisabled then
 			if debugX then warn('Reporting Analytics') end
 			task.spawn(function()
 				local success, reporter = pcall(function()
-					return loadstring(game:HttpGet("https://analytics.sirius.menu/v1/reporter"))()
+					return loadstring(game:HttpGet("https://analytics.sirius.menu/v1/reporter", true))()
 				end)
 				if success and reporter then
 					pcall(function()
