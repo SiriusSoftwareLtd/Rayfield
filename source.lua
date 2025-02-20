@@ -13,9 +13,14 @@ if debugX then
 	warn('Initialising Rayfield')
 end
 
+local function getService(name)
+    local service = getService(name)
+    return if cloneref then cloneref(service) else service
+end
+
 local requestsDisabled = getgenv and getgenv().DISABLE_RAYFIELD_REQUESTS
 local InterfaceBuild = '3K3W'
-local Release = "Build 1.671"
+local Release = "Build 1.672"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -32,8 +37,8 @@ local settingsTable = {
 	}
 }
 
-local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
+local HttpService = getService('HttpService')
+local RunService = getService('RunService')
 
 -- Environment Check
 local useStudio = RunService:IsStudio() or false
@@ -556,10 +561,10 @@ local RayfieldLibrary = {
 
 
 -- Services
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
+local UserInputService = getService("UserInputService")
+local TweenService = getService("TweenService")
+local Players = getService("Players")
+local CoreGui = getService("CoreGui")
 
 -- Interface Management
 
@@ -745,7 +750,7 @@ local function makeDraggable(object, dragObject, enableTaptic, tapticOffset)
 	local offset = Vector2.zero
 	local screenGui = object:FindFirstAncestorWhichIsA("ScreenGui")
 	if screenGui and screenGui.IgnoreGuiInset then
-		offset += game:GetService('GuiService'):GetGuiInset()
+		offset += getService('GuiService'):GetGuiInset()
 	end
 
 	local function connectFunctions()
