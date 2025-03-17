@@ -87,6 +87,26 @@ local settingsTable = {
 	}
 }
 
+-- Settings that have been overridden by the developer. These will not be saved to the user's configuration file
+-- Overridden settings always take precedence over settings in the configuration file, and are cleared if the user changes the setting in the UI
+local overriddenSettings: { [string]: any } = {} -- For example, overriddenSettings["System.rayfieldOpen"] = "J"
+local function overrideSetting(category: string, name: string, value: any)
+	overriddenSettings[`{category}.{name}`] = value
+end
+
+local function getSetting(category: string, name: string): any
+	if overriddenSettings[`{category}.{name}`] ~= nil then
+		return overriddenSettings[`{category}.{name}`]
+	elseif settingsTable[category][name] ~= nil then
+		return settingsTable[category][name].Value
+	end
+end
+
+-- If requests/analytics have been disabled by developer, set the user-facing setting to false as well
+if requestsDisabled then
+	overrideSetting("System", "usageAnalytics", false)
+end
+
 local HttpService = getService('HttpService')
 local RunService = getService('RunService')
 
@@ -94,6 +114,7 @@ local RunService = getService('RunService')
 local useStudio = RunService:IsStudio() or false
 
 local settingsCreated = false
+local settingsInitialized = false -- Whether the UI elements in the settings page have been set to the proper values
 local cachedSettings
 --local prompt = useStudio and require(script.Parent.prompt) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua')
 local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
@@ -142,12 +163,13 @@ local function loadSettings()
 						for settingName, setting in pairs(settingCategory) do
 							if file[categoryName][settingName] then
 								setting.Value = file[categoryName][settingName].Value
-								setting.Element:Set(setting.Value)
+								setting.Element:Set(getSetting(categoryName, settingName))
 							end
 						end
 					end
 				end
 			end
+			settingsInitialized = true
 		end)
 	end)
 	
@@ -1169,7 +1191,7 @@ local function Hide(notify: boolean?)
 		if useMobilePrompt then 
 			RayfieldLibrary:Notify({Title = "Interface Hidden", Content = "The interface has been hidden, you can unhide the interface by tapping 'Show Rayfield'.", Duration = 7, Image = 4400697855})
 		else
-			RayfieldLibrary:Notify({Title = "Interface Hidden", Content = `The interface has been hidden, you can unhide the interface by tapping {settingsTable.General.rayfieldOpen.Value or 'K'}.`, Duration = 7, Image = 4400697855})
+			RayfieldLibrary:Notify({Title = "Interface Hidden", Content = `The interface has been hidden, you can unhide the interface by tapping {getSetting("General", "rayfieldOpen")}.`, Duration = 7, Image = 4400697855})
 		end
 	end
 
@@ -1450,7 +1472,7 @@ local function Minimise()
 	Debounce = false
 end
 
-local function updateSettings()
+local function saveSettings() -- Save settings to config file
 	local encoded
 	local success, err = pcall(function()
 		encoded = HttpService:JSONEncode(settingsTable)
@@ -1466,6 +1488,15 @@ local function updateSettings()
 			writefile(RayfieldFolder..'/settings'..ConfigurationExtension, encoded)
 		end
 	end
+end
+
+local function updateSetting(category: string, setting: string, value: any)
+	if not settingsInitialized then
+		return
+	end
+	settingsTable[category][setting].Value = value
+	overriddenSettings[`{category}.{setting}`] = nil -- If user changes an overriden setting, remove the override
+	saveSettings()
 end
 
 local function createSettings(window)
@@ -1490,7 +1521,7 @@ local function createSettings(window)
 	for categoryName, settingCategory in pairs(settingsTable) do
 		newTab:CreateSection(categoryName)
 
-		for _, setting in pairs(settingCategory) do
+		for settingName, setting in pairs(settingCategory) do
 			if setting.Type == 'input' then
 				setting.Element = newTab:CreateInput({
 					Name = setting.Name,
@@ -1499,8 +1530,7 @@ local function createSettings(window)
 					Ext = true,
 					RemoveTextAfterFocusLost = setting.ClearOnFocus,
 					Callback = function(Value)
-						setting.Value = Value
-						updateSettings()
+						updateSetting(categoryName, settingName, Value)
 					end,
 				})
 			elseif setting.Type == 'toggle' then
@@ -1509,8 +1539,7 @@ local function createSettings(window)
 					CurrentValue = setting.Value,
 					Ext = true,
 					Callback = function(Value)
-						setting.Value = Value
-						updateSettings()
+						updateSetting(categoryName, settingName, Value)
 					end,
 				})
 			elseif setting.Type == 'bind' then
@@ -1521,8 +1550,7 @@ local function createSettings(window)
 					Ext = true,
 					CallOnChange = true,
 					Callback = function(Value)
-						setting.Value = Value
-						updateSettings()
+						updateSetting(categoryName, settingName, Value)
 					end,
 				})
 			end
@@ -1531,7 +1559,7 @@ local function createSettings(window)
 
 	settingsCreated = true
 	loadSettings()
-	updateSettings()
+	saveSettings()
 end
 
 
@@ -1554,6 +1582,13 @@ function RayfieldLibrary:CreateWindow(Settings)
 			function() 
 				RayfieldLibrary:Notify({Title = 'Build Mismatch', Content = 'Rayfield may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.\n\nTry rejoining and then run the script twice.', Image = 4335487866, Duration = 15})		
 			end)
+	end
+
+	if Settings.ToggleUIKeybind then
+		local keybind = Settings.ToggleUIKeybind
+		assert(type(Settings.ToggleUIKeybind) == "string", "ToggleUIKeybind must be a string")
+		assert(Enum.KeyCode[Settings.ToggleUIKeybind], "ToggleUIKeybind must be a valid KeyCode")
+		overrideSetting("General", "rayfieldOpen", keybind)
 	end
 
 	if isfolder and not isfolder(RayfieldFolder) then
@@ -2980,7 +3015,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end)
 			Keybind.KeybindFrame.KeybindBox.FocusLost:Connect(function()
 				CheckingForKey = false
-				if Keybind.KeybindFrame.KeybindBox.Text == nil or "" then
+				if Keybind.KeybindFrame.KeybindBox.Text == nil or Keybind.KeybindFrame.KeybindBox.Text == "" then
 					Keybind.KeybindFrame.KeybindBox.Text = KeybindSettings.CurrentKeybind
 					if not KeybindSettings.Ext then
 						SaveConfiguration()
@@ -3627,7 +3662,7 @@ Topbar.Hide.MouseButton1Click:Connect(function()
 end)
 
 hideHotkeyConnection = UserInputService.InputBegan:Connect(function(input, processed)
-	if (input.KeyCode == Enum.KeyCode[settingsTable.General.rayfieldOpen.Value or 'K'] and not processed) then
+	if (input.KeyCode == Enum.KeyCode[getSetting("General", "rayfieldOpen")]) and not processed then
 		if Debounce then return end
 		if Hidden then
 			Hidden = false
