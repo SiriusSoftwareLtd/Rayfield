@@ -1568,11 +1568,20 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end)
 	end
 
-	if Settings.ToggleUIKeybind then
+	if Settings.ToggleUIKeybind then -- Can either be a string or an Enum.KeyCode
 		local keybind = Settings.ToggleUIKeybind
-		assert(type(Settings.ToggleUIKeybind) == "string", "ToggleUIKeybind must be a string")
-		assert(Enum.KeyCode[Settings.ToggleUIKeybind], "ToggleUIKeybind must be a valid KeyCode")
-		overrideSetting("General", "rayfieldOpen", keybind)
+		if type(keybind) == "string" then
+			keybind = string.upper(keybind)
+			assert(pcall(function()
+				return Enum.KeyCode[keybind]
+			end), "ToggleUIKeybind must be a valid KeyCode")
+			overrideSetting("General", "rayfieldOpen", keybind)
+		elseif typeof(keybind) == "EnumItem" then
+			assert(keybind.EnumType == Enum.KeyCode, "ToggleUIKeybind must be a KeyCode enum")
+			overrideSetting("General", "rayfieldOpen", keybind.Name)
+		else
+			error("ToggleUIKeybind must be a string or KeyCode enum")
+		end
 	end
 
 	if isfolder and not isfolder(RayfieldFolder) then
