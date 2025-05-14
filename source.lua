@@ -207,8 +207,14 @@ if not requestsDisabled then
 	success, analyticsLib = pcall(safeLoadAnalyticsLib)
 	if not success then
 		warn("Failed to load analytics reporter")
+	else
+		analyticsLib:load()
 	end
 	local function sendReport()
+		if not analyticsLib:isLoaded() then
+			warn("Analytics library not loaded")
+			return
+		end
 		if useStudio then
 			print('Sending Analytics')
 		else
