@@ -14,8 +14,8 @@ if debugX then
 end
 
 local function getService(name)
-    local service = game:GetService(name)
-    return if cloneref then cloneref(service) else service
+	local service = game:GetService(name)
+	return if cloneref then cloneref(service) else service
 end
 
 -- Loads and executes a function hosted on a remote URL. Cancels the request if the requested URL takes too long to respond.
@@ -123,7 +123,7 @@ local request = (syn and syn.request) or (fluxus and fluxus.request) or (http an
 
 local function loadSettings()
 	local file = nil
-	
+
 	local success, result =	pcall(function()
 		task.spawn(function()
 			if isfolder and isfolder(RayfieldFolder) then
@@ -172,7 +172,7 @@ local function loadSettings()
 			settingsInitialized = true
 		end)
 	end)
-	
+
 	if not success then 
 		if writefile then
 			warn('Rayfield had an issue accessing configuration saving capability.')
@@ -1601,7 +1601,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 	LoadingFrame.Title.TextTransparency = 1
 	LoadingFrame.Subtitle.TextTransparency = 1
 
-	MPrompt.Title.Text = 'Show '..Settings.ShowText or 'Rayfield'
+	if Settings.ShowText then
+		MPrompt.Title.Text = 'Show '..Settings.ShowText
+	end
 
 	LoadingFrame.Version.TextTransparency = 1
 	LoadingFrame.Title.Text = Settings.LoadingTitle or "Rayfield"
@@ -3534,9 +3536,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 	local success, result = pcall(function()
 		createSettings(Window)
 	end)
-	
+
 	if not success then warn('Rayfield had an issue creating settings.') end
-	
+
 	return Window
 end
 
