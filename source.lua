@@ -226,7 +226,7 @@ if not requestsDisabled then
 		analyticsLib:load()
 	end
 	local function sendReport()
-		if not analyticsLib:isLoaded() then
+		if not analyticsLib or (analyticsLib and not analyticsLib:isLoaded()) then
 			warn("Analytics library not loaded")
 			return
 		end
