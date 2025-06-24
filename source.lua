@@ -2288,7 +2288,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 				ColorPicker.RGB.RInput.InputBox.Text = tostring(r)
 				ColorPicker.RGB.GInput.InputBox.Text = tostring(g)
 				ColorPicker.RGB.BInput.InputBox.Text = tostring(b)
-				ColorPicker.HexInput.InputBox.Text = string.format("#%02X%02X%02X",color.R*0xFF,color.G*0xFF,color.B*0xFF)
+				hex = string.format("#%02X%02X%02X",color.R*0xFF,color.G*0xFF,color.B*0xFF)
+				ColorPicker.HexInput.InputBox.Text = hex
 			end
 			setDisplay()
 			ColorPicker.HexInput.InputBox.FocusLost:Connect(function()
@@ -2328,7 +2329,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				local r,g,b = math.floor((h*255)+0.5),math.floor((s*255)+0.5),math.floor((v*255)+0.5)
 				ColorPickerSettings.Color = Color3.fromRGB(r,g,b)
 				if not ColorPickerSettings.Ext then
-					SaveConfiguration()
+					SaveConfiguration(ColorPickerSettings.Flag..'\n'..tostring(ColorPickerSettings.Color))
 				end
 			end
 			ColorPicker.RGB.RInput.InputBox.FocusLost:connect(function()
