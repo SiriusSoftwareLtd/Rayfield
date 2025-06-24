@@ -117,7 +117,7 @@ local settingsCreated = false
 local settingsInitialized = false -- Whether the UI elements in the settings page have been set to the proper values
 local cachedSettings
 local prompt = useStudio and require(script.Parent.prompt) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua')
-local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
+local requestFunc = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
 
 
@@ -212,9 +212,12 @@ if not requestsDisabled then
 		warn('Querying Settings for Reporter Information')
 	end
 	local function safeLoadAnalyticsLib()
-		local req = request({ Url = "https://analytics.sirius.menu/script", Method = "GET" })
+		local req = requestFunc({ Url = "https://analytics.sirius.menu/script", Method = "GET" })
 		if not req.Success then
 			return nil, "Failed to load analytics library: " .. req.StatusCode
+		end
+		if not loadstring or loadstring("return 2 + 2")() ~= 4 then
+			return nil, "loadstring is not available"
 		end
 		return loadstring(req.Body)()
 	end
@@ -1717,9 +1720,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 		end
 
 		if isfile and not isfile(RayfieldFolder.."/Discord Invites".."/"..Settings.Discord.Invite..ConfigurationExtension) then
-			if request then
+			if requestFunc then
 				pcall(function()
-					request({
+					requestFunc({
 						Url = 'http://127.0.0.1:6463/rpc?v=1',
 						Method = 'POST',
 						Headers = {
