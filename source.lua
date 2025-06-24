@@ -215,10 +215,12 @@ if promptUser == 1 and prompt and type(prompt.create) == "function" then
 end
 
 local success, analyticsLib
+local sendReport = function(ev_n, sc_n) warn("Failed to load report function") end
 if not requestsDisabled then
 	if debugX then
 		warn('Querying Settings for Reporter Information')
-	end	local function safeLoadAnalyticsLib()
+	end	
+	local function safeLoadAnalyticsLib()
 		if not requestFunc then
 			return nil, "No request function available"
 		end
@@ -241,7 +243,7 @@ if not requestsDisabled then
 		warn("Analytics library loaded but missing load function")
 		analyticsLib = nil
 	end
-	local function sendReport()
+	sendReport = function(ev_n, sc_n)
 		if not (type(analyticsLib) == "table" and type(analyticsLib.isLoaded) == "function" and analyticsLib:isLoaded()) then
 
 			warn("Analytics library not loaded")
@@ -253,8 +255,8 @@ if not requestsDisabled then
 			if debugX then warn('Reporting Analytics') end
 			analyticsLib:report(
 				{
-					["name"] = "execution",
-					["script"] = {["name"] = "Rayfield", ["version"] = Release}
+					["name"] = ev_n,
+					["script"] = {["name"] = sc_n, ["version"] = Release}
 				},
 				{
 					["version"] = InterfaceBuild
@@ -264,9 +266,9 @@ if not requestsDisabled then
 		end
 	end
 	if cachedSettings and (#cachedSettings == 0 or (cachedSettings.System and cachedSettings.System.usageAnalytics and cachedSettings.System.usageAnalytics.Value)) then
-		sendReport()
+		sendReport("execution", "Rayfield")
 	elseif not cachedSettings then
-		sendReport()
+		sendReport("execution", "Rayfield")
 	end
 end
 
@@ -1615,6 +1617,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 		makefolder(RayfieldFolder)
 	end
 
+	-- Attempt to report an event to analytics
+	sendReport("window_created", Settings.Name or "Unknown")
+	
 	local Passthrough = false
 	Topbar.Title.Text = Settings.Name
 
