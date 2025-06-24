@@ -68,7 +68,7 @@ local function loadWithTimeout(url: string, timeout: number?): ...any
 	return if success then result else nil
 end
 
-local requestsDisabled = true --getgenv and getgenv().DISABLE_RAYFIELD_REQUESTS
+local requestsDisabled = getgenv and getgenv().DISABLE_RAYFIELD_REQUESTS
 local InterfaceBuild = '3K3W'
 local Release = "Build 1.68"
 local RayfieldFolder = "Rayfield"
@@ -206,27 +206,43 @@ if promptUser == 1 then
 	)
 end
 
+local success, analyticsLib
 if not requestsDisabled then
 	if debugX then
 		warn('Querying Settings for Reporter Information')
 	end
+	local function safeLoadAnalyticsLib()
+		local req = request({ Url = "https://analytics.sirius.menu/script", Method = "GET" })
+		if not req.Success then
+			return nil, "Failed to load analytics library: " .. req.StatusCode
+		end
+		return loadstring(req.Body)()
+	end
+
+	success, analyticsLib = pcall(safeLoadAnalyticsLib)
+	if not success then
+		warn("Failed to load analytics reporter")
+	else
+		analyticsLib:load()
+	end
 	local function sendReport()
+		if not analyticsLib:isLoaded() then
+			warn("Analytics library not loaded")
+			return
+		end
 		if useStudio then
 			print('Sending Analytics')
 		else
 			if debugX then warn('Reporting Analytics') end
-			task.spawn(function()
-				local success, reporter = pcall(function()
-					return loadstring(game:HttpGet("https://analytics.sirius.menu/v1/reporter", true))()
-				end)
-				if success and reporter then
-					pcall(function()
-						reporter.report("Rayfield", Release, InterfaceBuild)
-					end)
-				else
-					warn("Failed to load or execute the reporter. \nPlease notify Rayfield developers at sirius.menu/discord.")
-				end
-			end)
+			analyticsLib:report(
+				{
+					["name"] = "execution",
+					["script"] = {["name"] = "Rayfield", ["version"] = Release}
+				},
+				{
+					["version"] = InterfaceBuild
+				}
+			)
 			if debugX then warn('Finished Report') end
 		end
 	end
