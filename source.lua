@@ -68,7 +68,7 @@ local function loadWithTimeout(url: string, timeout: number?): ...any
 	return if success then result else nil
 end
 
-local requestsDisabled = getgenv and getgenv().DISABLE_RAYFIELD_REQUESTS
+local requestsDisabled = true --getgenv and getgenv().DISABLE_RAYFIELD_REQUESTS
 local InterfaceBuild = '3K3W'
 local Release = "Build 1.68"
 local RayfieldFolder = "Rayfield"
@@ -198,22 +198,6 @@ if debugX then
 	warn('Settings Loaded')
 end
 
-local promptUser = math.random(1,6)
-
-if promptUser == 1 and prompt and type(prompt.create) == "function" then
-	prompt.create(
-		'Be cautious when running scripts',
-	    [[Please be careful when running scripts from unknown developers. This script has already been ran.
-
-<font transparency='0.3'>Some scripts may steal your items or in-game goods.</font>]],
-		'Okay',
-		'',
-		function()
-
-		end
-	)
-end
-
 local success, analyticsLib
 local sendReport = function(ev_n, sc_n) warn("Failed to load report function") end
 if not requestsDisabled then
@@ -270,6 +254,22 @@ if not requestsDisabled then
 	elseif not cachedSettings then
 		sendReport("execution", "Rayfield")
 	end
+end
+
+local promptUser = math.random(1,6)
+
+if promptUser == 1 and prompt and type(prompt.create) == "function" then
+	prompt.create(
+		'Be cautious when running scripts',
+	    [[Please be careful when running scripts from unknown developers. This script has already been ran.
+
+<font transparency='0.3'>Some scripts may steal your items or in-game goods.</font>]],
+		'Okay',
+		'',
+		function()
+
+		end
+	)
 end
 
 if debugX then
