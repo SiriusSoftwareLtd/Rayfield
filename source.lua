@@ -215,7 +215,8 @@ if not requestsDisabled then
 		if not loadstring or loadstring("return 2 + 2")() ~= 4 then
 			return nil, "loadstring is not available"
 		end
-		return loadWithTimeout(req.Body)()
+		-- This must be a loadstring as the body is a script.
+		return loadstring(req.Body)()
 	end
 	success, analyticsLib = pcall(safeLoadAnalyticsLib)
 	if not success then
