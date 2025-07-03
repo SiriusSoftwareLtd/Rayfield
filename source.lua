@@ -198,28 +198,14 @@ if debugX then
 	warn('Settings Loaded')
 end
 
-local success, analyticsLib
+local analyticsLib
 local sendReport = function(ev_n, sc_n) warn("Failed to load report function") end
 if not requestsDisabled then
 	if debugX then
 		warn('Querying Settings for Reporter Information')
 	end	
-	local function safeLoadAnalyticsLib()
-		if not requestFunc then
-			return nil, "No request function available"
-		end
-		local req = requestFunc({ Url = "https://analytics.sirius.menu/script", Method = "GET" })
-		if not req or not req.Success then
-			return nil, "Failed to load analytics library: " .. (req and req.StatusCode or "No response")
-		end
-		if not loadstring or loadstring("return 2 + 2")() ~= 4 then
-			return nil, "loadstring is not available"
-		end
-		-- This must be a loadstring as the body is a script.
-		return loadstring(req.Body)()
-	end
-	success, analyticsLib = pcall(safeLoadAnalyticsLib)
-	if not success then
+	analyticsLib = loadWithTimeout("https://analytics.sirius.menu/script")
+	if not analyticsLib then
 		warn("Failed to load analytics reporter")
 		analyticsLib = nil
 	elseif analyticsLib and type(analyticsLib.load) == "function" then
@@ -230,7 +216,6 @@ if not requestsDisabled then
 	end
 	sendReport = function(ev_n, sc_n)
 		if not (type(analyticsLib) == "table" and type(analyticsLib.isLoaded) == "function" and analyticsLib:isLoaded()) then
-
 			warn("Analytics library not loaded")
 			return
 		end
