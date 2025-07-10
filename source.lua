@@ -1605,8 +1605,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 	end
 
 	-- Attempt to report an event to analytics
-	sendReport("window_created", Settings.Name or "Unknown")
-	
+	if not requestsDisabled then
+		sendReport("window_created", Settings.Name or "Unknown")
+	end
 	local Passthrough = false
 	Topbar.Title.Text = Settings.Name
 
