@@ -243,7 +243,7 @@ if not requestsDisabled then
 	end
 end
 
-local promptUser = math.random(1,6)
+local promptUser = 2
 
 if promptUser == 1 and prompt and type(prompt.create) == "function" then
 	prompt.create(
@@ -3996,3 +3996,4 @@ task.delay(4, function()
 end)
 
 return RayfieldLibrary
+
