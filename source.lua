@@ -3049,7 +3049,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				TweenService:Create(Keybind, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
 			end)
 
-			keybindConnections[keybindConnections + 1] = UserInputService.InputBegan:Connect(function(input, processed)
+			keybindConnections[#keybindConnections + 1] = UserInputService.InputBegan:Connect(function(input, processed)
 				if CheckingForKey then
 					if input.KeyCode ~= Enum.KeyCode.Unknown then
 						local SplitMessage = string.split(tostring(input.KeyCode), ".")
@@ -4003,5 +4003,6 @@ task.delay(4, function()
 end)
 
 return RayfieldLibrary
+
 
 
