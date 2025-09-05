@@ -113,7 +113,6 @@ local RunService = getService('RunService')
 
 -- Environment Check
 local useStudio = RunService:IsStudio() or false
-local keybindConnections = {}
 
 local settingsCreated = false
 local settingsInitialized = false -- Whether the UI elements in the settings page have been set to the proper values
@@ -3049,7 +3048,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				TweenService:Create(Keybind, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
 			end)
 
-			keybindConnections[#keybindConnections + 1] = UserInputService.InputBegan:Connect(function(input, processed)
+			local connection = UserInputService.InputBegan:Connect(function(input, processed)
 				if CheckingForKey then
 					if input.KeyCode ~= Enum.KeyCode.Unknown then
 						local SplitMessage = string.split(tostring(input.KeyCode), ".")
@@ -3103,6 +3102,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 					end
 				end
 			end)
+
+			table.insert(keybindConnections, connection)
 
 			Keybind.KeybindFrame.KeybindBox:GetPropertyChangedSignal("Text"):Connect(function()
 				TweenService:Create(Keybind.KeybindFrame, TweenInfo.new(0.55, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(0, Keybind.KeybindFrame.KeybindBox.TextBounds.X + 24, 0, 30)}):Play()
@@ -3585,12 +3586,7 @@ local hideHotkeyConnection -- Has to be initialized here since the connection is
 function RayfieldLibrary:Destroy()
 	rayfieldDestroyed = true
 	hideHotkeyConnection:Disconnect()
-
-	for _, connection in ipairs(keybindConnections) do
-		connection:Disconnect()
-		connection = nil
-	end
-
+	table.clear(keybindConnections)
 	Rayfield:Destroy()
 end
 
@@ -4003,6 +3999,7 @@ task.delay(4, function()
 end)
 
 return RayfieldLibrary
+
 
 
 
