@@ -3004,6 +3004,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		end
 
 		-- Keybind
+		local keybindConnections = {}
 		function Tab:CreateKeybind(KeybindSettings)
 			local CheckingForKey = false
 			local Keybind = Elements.Template.Keybind:Clone()
@@ -3999,6 +4000,7 @@ task.delay(4, function()
 end)
 
 return RayfieldLibrary
+
 
 
 
