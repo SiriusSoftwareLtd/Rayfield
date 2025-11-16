@@ -131,11 +131,11 @@ end
 
 -- The function below provides a safe alternative for calling error-prone functions
 -- Especially useful for filesystem function (writefile, makefolder, etc.)
-local function callSafely(func, arguments)
+local function callSafely(func, ...)
 	if func then
-		local success, result = pcall(func, arguments)
+		local success, result = pcall(func, ...)
 		if not success then
-			warn("Function failed with error: ", result)
+			warn("Rayfield | Function failed with error: ", result)
 			return false
 		else
 			return result
