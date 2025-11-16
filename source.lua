@@ -148,7 +148,6 @@ local function loadSettings()
 	]]
 			end
 
-
 			if file then
 				local success, decodedFile = pcall(function() return HttpService:JSONDecode(file) end)
 				if success then
@@ -166,7 +165,7 @@ local function loadSettings()
 				return
 			end
 
-			if file ~= {} then
+			if #file > 0 then
 				for categoryName, settingCategory in pairs(settingsTable) do
 					if file[categoryName] then
 						for settingName, setting in pairs(settingCategory) do
@@ -175,6 +174,17 @@ local function loadSettings()
 								setting.Element:Set(getSetting(categoryName, settingName))
 							end
 						end
+					end
+				end
+			-- If no settings saved, apply overridden settings only
+			else
+				for settingName, settingValue in overriddenSettings do
+					local split = string.split(settingName, ".")
+					assert(#split == 2, "Rayfield | Invalid overridden setting name: " .. settingName)
+					local categoryName = split[1]
+					local settingNameOnly = split[2]
+					if settingsTable[categoryName] and settingsTable[categoryName][settingNameOnly] then
+						settingsTable[categoryName][settingNameOnly].Element:Set(settingValue)
 					end
 				end
 			end
