@@ -232,9 +232,9 @@ end
 
 local ANALYTICS_URL = "https://rayfield-analytics.sirius-software-ltd.workers.dev/collect"
 
-local sendReport = function(ev_n, sc_n) end
+local sendReport = function(ev_n, sc_n, extra) end
 if not requestsDisabled then
-	sendReport = function(ev_n, sc_n)
+	sendReport = function(ev_n, sc_n, extra)
 		if not requestFunc then return end
 		if not getSetting("System", "usageAnalytics") then return end
 		if useStudio then
@@ -246,18 +246,27 @@ if not requestsDisabled then
 			local executorName = "Unknown"
 			local ok, name = pcall(identifyexecutor)
 			if ok and name then executorName = tostring(name):sub(1, 64) end
+
+			local payload = {
+				event             = ev_n,
+				script_name       = sc_n,
+				script_version    = Release,
+				interface_version = InterfaceBuild,
+				place_id          = tostring(game.PlaceId),
+				executor          = executorName,
+			}
+
+			if extra then
+				for k, v in pairs(extra) do
+					payload[k] = v
+				end
+			end
+
 			requestFunc({
 				Url = ANALYTICS_URL,
 				Method = "POST",
 				Headers = { ["Content-Type"] = "application/json", ["X-Analytics-Token"] = "626bb03f8dc32e8cdedb7df1b21e7d20331ec4493808499324090c61ddd074a4" },
-				Body = HttpService:JSONEncode({
-					event             = ev_n,
-					script_name       = sc_n,
-					script_version    = Release,
-					interface_version = InterfaceBuild,
-					place_id          = tostring(game.PlaceId),
-					executor          = executorName,
-				})
+				Body = HttpService:JSONEncode(payload)
 			})
 		end)
 		if debugX then warn('Finished Report') end
@@ -3471,7 +3480,27 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 	-- Report after createSettings so loadSettings() has run and usageAnalytics reflects the user's saved preference
 	if not requestsDisabled then
-		sendReport("window_created", Settings.Name or "Unknown")
+		local themeName = "Default"
+		if Settings.Theme then
+			if type(Settings.Theme) == "string" then
+				themeName = Settings.Theme
+			elseif type(Settings.Theme) == "table" then
+				themeName = "Custom"
+			end
+		end
+
+		local discordInvite = nil
+		if Settings.Discord and Settings.Discord.Enabled and Settings.Discord.Invite and Settings.Discord.Invite ~= "" then
+			discordInvite = tostring(Settings.Discord.Invite):sub(1, 64)
+		end
+
+		sendReport("window_created", Settings.Name or "Unknown", {
+			theme = themeName,
+			is_mobile = useMobileSizing and true or false,
+			has_key_system = Settings.KeySystem and true or false,
+			discord_invite = discordInvite,
+			config_saving = (Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled) and true or false,
+		})
 	end
 
 	return Window
