@@ -69,7 +69,12 @@ local function loadWithTimeout(url: string, timeout: number?): ...any
 	return if success then result else nil
 end
 
-local requestsDisabled = true --getgenv and getgenv().DISABLE_RAYFIELD_REQUESTS
+local _getgenv = rawget(_G, "getgenv")
+local requestsDisabled = false
+if _getgenv then
+	local ok, result = pcall(function() return _getgenv().DISABLE_RAYFIELD_REQUESTS end)
+	if ok and result then requestsDisabled = true end
+end
 local InterfaceBuild = '3K3W'
 local Release = "Build 1.69"
 local RayfieldFolder = "Rayfield"
@@ -116,7 +121,6 @@ local useStudio = RunService:IsStudio() or false
 
 local settingsCreated = false
 local settingsInitialized = false -- Whether the UI elements in the settings page have been set to the proper values
-local cachedSettings
 local prompt = useStudio and require(script.Parent.prompt) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua')
 local requestFunc = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
@@ -180,7 +184,6 @@ local function loadSettings()
 
 
 		if not settingsCreated then
-			cachedSettings = file
 			return
 		end
 
@@ -227,47 +230,41 @@ if debugX then
 	warn('Settings Loaded')
 end
 
-local analyticsLib
-local sendReport = function(ev_n, sc_n) warn("Failed to load report function") end
+local ANALYTICS_URL = "https://rayfield-analytics.sirius-software-ltd.workers.dev/collect"
+
+local sendReport = function(ev_n, sc_n) end
 if not requestsDisabled then
-	if debugX then
-		warn('Querying Settings for Reporter Information')
-	end	
-	analyticsLib = loadWithTimeout("https://analytics.sirius.menu/script")
-	if not analyticsLib then
-		warn("Failed to load analytics reporter")
-		analyticsLib = nil
-	elseif analyticsLib and type(analyticsLib.load) == "function" then
-		analyticsLib:load()
-	else
-		warn("Analytics library loaded but missing load function")
-		analyticsLib = nil
-	end
 	sendReport = function(ev_n, sc_n)
-		if not (type(analyticsLib) == "table" and type(analyticsLib.isLoaded) == "function" and analyticsLib:isLoaded()) then
-			warn("Analytics library not loaded")
+		if not requestFunc then return end
+		if not getSetting("System", "usageAnalytics") then return end
+		if useStudio then
+			print('Sending Analytics:', ev_n, sc_n)
 			return
 		end
-		if useStudio then
-			print('Sending Analytics')
-		else
-			if debugX then warn('Reporting Analytics') end
-			analyticsLib:report(
-				{
-					["name"] = ev_n,
-					["script"] = {["name"] = sc_n, ["version"] = Release}
-				},
-				{
-					["version"] = InterfaceBuild
-				}
-			)
-			if debugX then warn('Finished Report') end
-		end
-	end
-	if cachedSettings and (#cachedSettings == 0 or (cachedSettings.System and cachedSettings.System.usageAnalytics and cachedSettings.System.usageAnalytics.Value)) then
-		sendReport("execution", "Rayfield")
-	elseif not cachedSettings then
-		sendReport("execution", "Rayfield")
+		if debugX then warn('Reporting Analytics') end
+		pcall(function()
+			local executorName = "Unknown"
+			local _iex = rawget(_G, "identifyexecutor")
+			if _iex then
+				local ok, name = pcall(_iex)
+				if ok and name then executorName = tostring(name):sub(1, 64) end
+			end
+			requestFunc({
+				Url = ANALYTICS_URL,
+				Method = "POST",
+				Headers = { ["Content-Type"] = "application/json", ["X-Analytics-Token"] = "626bb03f8dc32e8cdedb7df1b21e7d20331ec4493808499324090c61ddd074a4" },
+				Body = HttpService:JSONEncode({
+					event             = ev_n,
+					script_name       = sc_n,
+					script_version    = Release,
+					interface_version = InterfaceBuild,
+					game_id           = tostring(game.GameId),
+					place_id          = tostring(game.PlaceId),
+					executor          = executorName,
+				})
+			})
+		end)
+		if debugX then warn('Finished Report') end
 	end
 end
 
@@ -1559,10 +1556,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 	ensureFolder(RayfieldFolder)
 
-	-- Attempt to report an event to analytics
-	if not requestsDisabled then
-		sendReport("window_created", Settings.Name or "Unknown")
-	end
 	local Passthrough = false
 	Topbar.Title.Text = Settings.Name
 
@@ -3479,6 +3472,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 	end)
 
 	if not success then warn('Rayfield had an issue creating settings.') end
+
+	-- Report after createSettings so loadSettings() has run and usageAnalytics reflects the user's saved preference
+	if not requestsDisabled then
+		sendReport("window_created", Settings.Name or "Unknown")
+	end
 
 	return Window
 end
