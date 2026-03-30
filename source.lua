@@ -244,11 +244,8 @@ if not requestsDisabled then
 		if debugX then warn('Reporting Analytics') end
 		pcall(function()
 			local executorName = "Unknown"
-			local _iex = rawget(_G, "identifyexecutor")
-			if _iex then
-				local ok, name = pcall(_iex)
-				if ok and name then executorName = tostring(name):sub(1, 64) end
-			end
+			local ok, name = pcall(identifyexecutor)
+			if ok and name then executorName = tostring(name):sub(1, 64) end
 			requestFunc({
 				Url = ANALYTICS_URL,
 				Method = "POST",
@@ -258,7 +255,6 @@ if not requestsDisabled then
 					script_name       = sc_n,
 					script_version    = Release,
 					interface_version = InterfaceBuild,
-					game_id           = tostring(game.GameId),
 					place_id          = tostring(game.PlaceId),
 					executor          = executorName,
 				})
