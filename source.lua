@@ -232,6 +232,47 @@ end
 
 local ANALYTICS_URL = "https://rayfield-analytics.sirius-software-ltd.workers.dev/collect"
 
+-- MurmurHash2 (32-bit) implemented with bit32 to avoid double-precision overflow.
+-- Produces a deterministic 16-char hex string from a Roblox UserId.
+local function hashUserId(userId)
+	local function mul32(a, b)
+		local al = bit32.band(a, 0xFFFF)
+		local ah = bit32.rshift(a, 16)
+		local bl = bit32.band(b, 0xFFFF)
+		local bh = bit32.rshift(b, 16)
+		return bit32.band(al * bl + bit32.lshift(bit32.band(al * bh + ah * bl, 0xFFFF), 16), 0xFFFFFFFF)
+	end
+
+	local function murmur2(input, seed)
+		local M = 0x5bd1e995
+		local h = bit32.bxor(seed, #input)
+		local i = 1
+		local len = #input
+		while i + 3 <= len do
+			local k = input:byte(i) + input:byte(i+1)*256 + input:byte(i+2)*65536 + input:byte(i+3)*16777216
+			k = mul32(k, M)
+			k = bit32.bxor(k, bit32.rshift(k, 24))
+			k = mul32(k, M)
+			h = mul32(h, M)
+			h = bit32.bxor(h, k)
+			i = i + 4
+		end
+		local rem = len - i + 1
+		if rem >= 3 then h = bit32.bxor(h, input:byte(i+2) * 65536) end
+		if rem >= 2 then h = bit32.bxor(h, input:byte(i+1) * 256) end
+		if rem >= 1 then h = bit32.bxor(h, input:byte(i)); h = mul32(h, M) end
+		h = bit32.bxor(h, bit32.rshift(h, 13))
+		h = mul32(h, M)
+		h = bit32.bxor(h, bit32.rshift(h, 15))
+		return h
+	end
+
+	local input = "rf:" .. tostring(userId)
+	local h1 = murmur2(input, 0x9747b28c)
+	local h2 = murmur2(input, 0x5f4a0bc3)
+	return string.format("%08x%08x", h1, h2)
+end
+
 local sendReport = function(ev_n, sc_n, extra) end
 if not requestsDisabled then
 	sendReport = function(ev_n, sc_n, extra)
@@ -247,13 +288,35 @@ if not requestsDisabled then
 			local ok, name = pcall(identifyexecutor)
 			if ok and name then executorName = tostring(name):sub(1, 64) end
 
+			local userHash = ""
+			local uidOk, uid = pcall(function() return Players.LocalPlayer.UserId end)
+			if uidOk and uid and uid ~= 0 then userHash = hashUserId(uid) end
+
+			local platform = "pc"
+			pcall(function()
+				if getService("GuiService"):IsTenFootInterface() then
+					platform = "console"
+				elseif UserInputService.TouchEnabled then
+					platform = "mobile"
+				end
+			end)
+
+			local locale = ""
+			pcall(function()
+				locale = tostring(Players.LocalPlayer.LocaleId):sub(1, 16)
+			end)
+
 			local payload = {
 				event             = ev_n,
 				script_name       = sc_n,
 				script_version    = Release,
 				interface_version = InterfaceBuild,
 				place_id          = tostring(game.PlaceId),
+				universe_id       = tostring(game.GameId),
 				executor          = executorName,
+				user_id           = userHash,
+				platform          = platform,
+				locale            = locale,
 			}
 
 			if extra then
