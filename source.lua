@@ -295,8 +295,10 @@ if not requestsDisabled then
 		if debugX then warn('Reporting Analytics') end
 		pcall(function()
 			local executorName = "Unknown"
-			local ok, name = pcall(identifyexecutor)
+			local executorVersion = ""
+			local ok, name, ver = pcall(identifyexecutor)
 			if ok and name then executorName = tostring(name):sub(1, 64) end
+			if ok and ver then executorVersion = tostring(ver):sub(1, 32) end
 
 			local userHash = ""
 			local uidOk, uid = pcall(function() return Players.LocalPlayer.UserId end)
@@ -324,6 +326,7 @@ if not requestsDisabled then
 				place_id          = tostring(game.PlaceId),
 				universe_id       = tostring(game.GameId),
 				executor          = executorName,
+				executor_version  = executorVersion,
 				user_id           = userHash,
 				platform          = platform,
 				locale            = locale,
