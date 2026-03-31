@@ -238,7 +238,8 @@ if debugX then
 	warn('Settings Loaded')
 end
 
-local ANALYTICS_URL = "https://rayfield-analytics.sirius-software-ltd.workers.dev/collect"
+local ANALYTICS_URL = "https://rayfield-collect.sirius-software-ltd.workers.dev"
+local ANALYTICS_SAMPLE_RATE = 0.5 -- send 50% of events (halves request volume)
 
 -- MurmurHash2 (32-bit) implemented with bit32 to avoid double-precision overflow.
 -- Produces a deterministic 16-char hex string from a Roblox UserId.
@@ -286,6 +287,7 @@ if not requestsDisabled then
 	sendReport = function(ev_n, sc_n, extra)
 		if not requestFunc then return end
 		if not getSetting("System", "usageAnalytics") then return end
+		if math.random() > ANALYTICS_SAMPLE_RATE then return end
 		if useStudio then
 			print('Sending Analytics:', ev_n, sc_n)
 			return
@@ -3578,6 +3580,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 			config_saving = (Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled) and true or false,
 			game_name = gameName,
 		})
+	end
+
+	if not useStudio then
+		pcall(function()
+			Players.LocalPlayer.Kicked:Connect(function(kickMessage)
+				sendReport("player_kicked", Settings.Name or "Unknown", {
+					kick_reason = kickMessage and tostring(kickMessage):sub(1, 256) or "",
+				})
+			end)
+		end)
 	end
 
 	return Window
