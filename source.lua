@@ -3586,12 +3586,40 @@ function RayfieldLibrary:CreateWindow(Settings)
 	end
 
 	if not useStudio then
-		pcall(function()
-			Players.LocalPlayer.Kicked:Connect(function(kickMessage)
+		task.spawn(function()
+			while true do
+				task.wait(1)
+				local ok, disconnectedRobloxUI = pcall(function()
+					return CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt")
+				end)
+				if not ok or not disconnectedRobloxUI then continue end
+
+				local reasonPrompt = ""
+				pcall(function()
+					reasonPrompt = disconnectedRobloxUI.MessageArea.ErrorFrame.ErrorMessage.Text
+				end)
+
+				local disconnectType = "kick"
+				local foundString = false
+
+				local disconnectTypes = { {"ban", {"ban", "perm"}}, {"network", {"internet connection", "network"}} }
+				for _, preDisconnectType in ipairs(disconnectTypes) do
+					for _, typeString in pairs(preDisconnectType[2]) do
+						if string.find(reasonPrompt, typeString) then
+							disconnectType = preDisconnectType[1]
+							foundString = true
+							break
+						end
+					end
+					if foundString then break end
+				end
+
 				sendReport("player_kicked", Settings.Name or "Unknown", {
-					kick_reason = kickMessage and tostring(kickMessage):sub(1, 256) or "",
+					kick_reason = reasonPrompt:sub(1, 256),
+					disconnect_type = disconnectType,
 				})
-			end)
+				break
+			end
 		end)
 	end
 
