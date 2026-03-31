@@ -3580,14 +3580,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 		})
 	end
 
-	if not useStudio then
-		Players.LocalPlayer.Kicked:Connect(function(kickMessage)
-			sendReport("player_kicked", Settings.Name or "Unknown", {
-				kick_reason = kickMessage and tostring(kickMessage):sub(1, 256) or "",
-			})
-		end)
-	end
-
 	return Window
 end
 
