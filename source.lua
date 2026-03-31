@@ -3491,7 +3491,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 		local discordInvite = nil
 		if Settings.Discord and Settings.Discord.Enabled and Settings.Discord.Invite and Settings.Discord.Invite ~= "" then
-			discordInvite = tostring(Settings.Discord.Invite):sub(1, 64)
+			local raw = tostring(Settings.Discord.Invite)
+			-- Normalize: strip URL prefixes to extract just the invite code
+			discordInvite = (raw:match("discord%.gg/([%w%-]+)") or raw:match("discord%.com/invite/([%w%-]+)") or raw):sub(1, 32)
+		end
+
+		local gameName = nil
+		if not useStudio then
+			pcall(function()
+				gameName = tostring(game.Name):sub(1, 128)
+			end)
 		end
 
 		sendReport("window_created", Settings.Name or "Unknown", {
@@ -3500,6 +3509,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			has_key_system = Settings.KeySystem and true or false,
 			discord_invite = discordInvite,
 			config_saving = (Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled) and true or false,
+			game_name = gameName,
 		})
 	end
 
