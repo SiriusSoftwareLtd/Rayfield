@@ -76,7 +76,7 @@ if _getgenv then
 	if ok and result then requestsDisabled = true end
 end
 local InterfaceBuild = '3K3W'
-local Release = "Build 1.69"
+local Release = "Build 1.7"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
