@@ -239,7 +239,6 @@ if debugX then
 end
 
 local ANALYTICS_URL = "https://rayfield-collect.sirius-software-ltd.workers.dev"
-local ANALYTICS_SAMPLE_RATE = 0.5 -- send 50% of events (halves request volume)
 
 -- MurmurHash2 (32-bit) implemented with bit32 to avoid double-precision overflow.
 -- Produces a deterministic 16-char hex string from a Roblox UserId.
@@ -287,7 +286,7 @@ if not requestsDisabled then
 	sendReport = function(ev_n, sc_n, extra)
 		if not requestFunc then return end
 		if not getSetting("System", "usageAnalytics") then return end
-		if math.random() > ANALYTICS_SAMPLE_RATE then return end
+
 		if useStudio then
 			print('Sending Analytics:', ev_n, sc_n)
 			return
@@ -3568,20 +3567,12 @@ function RayfieldLibrary:CreateWindow(Settings)
 			discordInvite = (raw:match("discord%.gg/([%w%-]+)") or raw:match("discord%.com/invite/([%w%-]+)") or raw):sub(1, 32)
 		end
 
-		local gameName = nil
-		if not useStudio then
-			pcall(function()
-				gameName = tostring(game.Name):sub(1, 128)
-			end)
-		end
-
 		sendReport("window_created", Settings.Name or "Unknown", {
 			theme = themeName,
 			is_mobile = useMobileSizing and true or false,
 			has_key_system = Settings.KeySystem and true or false,
 			discord_invite = discordInvite,
 			config_saving = (Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled) and true or false,
-			game_name = gameName,
 		})
 	end
 
