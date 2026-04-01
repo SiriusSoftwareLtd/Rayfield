@@ -238,7 +238,7 @@ if debugX then
 	warn('Settings Loaded')
 end
 
-local ANALYTICS_TOKEN = "626bb03f8dc32e8cdedb7df1b21e7d20331ec4493808499324090c61ddd074a4"
+local ANALYTICS_TOKEN = "05de7f9fd320d3b8428cd1c77014a337b85b6c8efee2c5914f5ab5700c354b9a"
 
 local reporter = nil
 if not requestsDisabled and not useStudio then
