@@ -238,113 +238,25 @@ if debugX then
 	warn('Settings Loaded')
 end
 
-local ANALYTICS_URL = "https://rayfield-collect.sirius-software-ltd.workers.dev"
+local ANALYTICS_TOKEN = "626bb03f8dc32e8cdedb7df1b21e7d20331ec4493808499324090c61ddd074a4"
 
--- MurmurHash2 (32-bit) implemented with bit32 to avoid double-precision overflow.
--- Produces a deterministic 16-char hex string from a Roblox UserId.
-local function hashUserId(userId)
-	local function mul32(a, b)
-		local al = bit32.band(a, 0xFFFF)
-		local ah = bit32.rshift(a, 16)
-		local bl = bit32.band(b, 0xFFFF)
-		local bh = bit32.rshift(b, 16)
-		return bit32.band(al * bl + bit32.lshift(bit32.band(al * bh + ah * bl, 0xFFFF), 16), 0xFFFFFFFF)
-	end
-
-	local function murmur2(input, seed)
-		local M = 0x5bd1e995
-		local h = bit32.bxor(seed, #input)
-		local i = 1
-		local len = #input
-		while i + 3 <= len do
-			local k = input:byte(i) + input:byte(i+1)*256 + input:byte(i+2)*65536 + input:byte(i+3)*16777216
-			k = mul32(k, M)
-			k = bit32.bxor(k, bit32.rshift(k, 24))
-			k = mul32(k, M)
-			h = mul32(h, M)
-			h = bit32.bxor(h, k)
-			i = i + 4
-		end
-		local rem = len - i + 1
-		if rem >= 3 then h = bit32.bxor(h, input:byte(i+2) * 65536) end
-		if rem >= 2 then h = bit32.bxor(h, input:byte(i+1) * 256) end
-		if rem >= 1 then h = bit32.bxor(h, input:byte(i)); h = mul32(h, M) end
-		h = bit32.bxor(h, bit32.rshift(h, 13))
-		h = mul32(h, M)
-		h = bit32.bxor(h, bit32.rshift(h, 15))
-		return h
-	end
-
-	local input = "rf:" .. tostring(userId)
-	local h1 = murmur2(input, 0x9747b28c)
-	local h2 = murmur2(input, 0x5f4a0bc3)
-	return string.format("%08x%08x", h1, h2)
-end
-
-local sendReport = function(ev_n, sc_n, extra) end
-if not requestsDisabled then
-	sendReport = function(ev_n, sc_n, extra)
-		if not requestFunc then return end
-		if not getSetting("System", "usageAnalytics") then return end
-
-		if useStudio then
-			print('Sending Analytics:', ev_n, sc_n)
-			return
-		end
-		if debugX then warn('Reporting Analytics') end
-		pcall(function()
-			local executorName = "Unknown"
-			local executorVersion = ""
-			local ok, name, ver = pcall(identifyexecutor)
-			if ok and name then executorName = tostring(name):sub(1, 64) end
-			if ok and ver then executorVersion = tostring(ver):sub(1, 32) end
-
-			local userHash = ""
-			local uidOk, uid = pcall(function() return Players.LocalPlayer.UserId end)
-			if uidOk and uid and uid ~= 0 then userHash = hashUserId(uid) end
-
-			local platform = "pc"
-			pcall(function()
-				if getService("GuiService"):IsTenFootInterface() then
-					platform = "console"
-				elseif UserInputService.TouchEnabled then
-					platform = "mobile"
-				end
-			end)
-
-			local locale = ""
-			pcall(function()
-				locale = tostring(Players.LocalPlayer.LocaleId):sub(1, 16)
-			end)
-
-			local payload = {
-				event             = ev_n,
-				script_name       = sc_n,
-				script_version    = Release,
-				interface_version = InterfaceBuild,
-				place_id          = tostring(game.PlaceId),
-				universe_id       = tostring(game.GameId),
-				executor          = executorName,
-				executor_version  = executorVersion,
-				user_id           = userHash,
-				platform          = platform,
-				locale            = locale,
-			}
-
-			if extra then
-				for k, v in pairs(extra) do
-					payload[k] = v
-				end
-			end
-
-			requestFunc({
-				Url = ANALYTICS_URL,
-				Method = "POST",
-				Headers = { ["Content-Type"] = "application/json", ["X-Analytics-Token"] = "626bb03f8dc32e8cdedb7df1b21e7d20331ec4493808499324090c61ddd074a4" },
-				Body = HttpService:JSONEncode(payload)
-			})
+local reporter = nil
+if not requestsDisabled and not useStudio then
+	local fetchSuccess, fetchResult = pcall((game :: any).HttpGet, game, "https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/reporter.lua")
+	if fetchSuccess and #fetchResult > 0 then
+		local execSuccess, Analytics = pcall(function()
+			return (loadstring(fetchResult) :: any)()
 		end)
-		if debugX then warn('Finished Report') end
+		if execSuccess and Analytics then
+			pcall(function()
+				reporter = Analytics.new({
+					url          = "https://rayfield-collect.sirius-software-ltd.workers.dev",
+					token        = ANALYTICS_TOKEN,
+					product_name = "Rayfield",
+					category     = "UILibrary",
+				})
+			end)
+		end
 	end
 end
 
@@ -3550,7 +3462,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	if not success then warn('Rayfield had an issue creating settings.') end
 
 	-- Report after createSettings so loadSettings() has run and usageAnalytics reflects the user's saved preference
-	if not requestsDisabled then
+	if reporter and getSetting("System", "usageAnalytics") then
 		local themeName = "Default"
 		if Settings.Theme then
 			if type(Settings.Theme) == "string" then
@@ -3567,51 +3479,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 			discordInvite = (raw:match("discord%.gg/([%w%-]+)") or raw:match("discord%.com/invite/([%w%-]+)") or raw):sub(1, 32)
 		end
 
-		sendReport("window_created", Settings.Name or "Unknown", {
-			theme = themeName,
-			is_mobile = useMobileSizing and true or false,
-			has_key_system = Settings.KeySystem and true or false,
-			discord_invite = discordInvite,
-			config_saving = (Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled) and true or false,
+		reporter:windowCreated({
+			script_name       = Settings.Name or "Unknown",
+			script_version    = Release,
+			interface_version = InterfaceBuild,
+			theme             = themeName,
+			is_mobile         = useMobileSizing and true or false,
+			has_key_system    = Settings.KeySystem and true or false,
+			discord_invite    = discordInvite,
+			config_saving     = (Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled) and true or false,
 		})
-	end
-
-	if not useStudio then
-		task.spawn(function()
-			while true do
-				task.wait(1)
-				local ok, disconnectedRobloxUI = pcall(function()
-					return CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt")
-				end)
-				if not ok or not disconnectedRobloxUI then continue end
-
-				local reasonPrompt = ""
-				pcall(function()
-					reasonPrompt = disconnectedRobloxUI.MessageArea.ErrorFrame.ErrorMessage.Text
-				end)
-
-				local disconnectType = "kick"
-				local foundString = false
-
-				local disconnectTypes = { {"ban", {"ban", "perm"}}, {"network", {"internet connection", "network"}} }
-				for _, preDisconnectType in ipairs(disconnectTypes) do
-					for _, typeString in pairs(preDisconnectType[2]) do
-						if string.find(reasonPrompt, typeString) then
-							disconnectType = preDisconnectType[1]
-							foundString = true
-							break
-						end
-					end
-					if foundString then break end
-				end
-
-				sendReport("player_kicked", Settings.Name or "Unknown", {
-					kick_reason = reasonPrompt:sub(1, 256),
-					disconnect_type = disconnectType,
-				})
-				break
-			end
-		end)
 	end
 
 	return Window
