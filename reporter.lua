@@ -3,43 +3,93 @@ local UserInputService = game:GetService("UserInputService")
 local GuiService       = game:GetService("GuiService")
 local HttpService      = game:GetService("HttpService")
 
--- ── MurmurHash2 (32-bit) — deterministic 16-char hex from a UserId ────────────
+-- ── SHA-256 (pure Luau) — privacy-focused one-way hash of UserId ─────────────
+-- Produces a 64-char hex digest. The server re-hashes this with a secret key
+-- (HMAC-SHA-256) before storage, so even if analytics data leaks the stored
+-- hashes cannot be reversed to Roblox UserIds without the server secret.
 local function hashUserId(userId)
-	local function mul32(a, b)
-		local al = bit32.band(a, 0xFFFF)
-		local ah = bit32.rshift(a, 16)
-		local bl = bit32.band(b, 0xFFFF)
-		local bh = bit32.rshift(b, 16)
-		return bit32.band(al * bl + bit32.lshift(bit32.band(al * bh + ah * bl, 0xFFFF), 16), 0xFFFFFFFF)
+	local band, bxor, bnot = bit32.band, bit32.bxor, bit32.bnot
+	local rshift, lshift, rrotate = bit32.rshift, bit32.lshift, bit32.rrotate
+
+	local K = {
+		0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+		0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+		0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+		0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+		0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+		0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+		0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+		0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+	}
+
+	local function add32(a, b, c, d, e)
+		local sum = a + b
+		if c then sum = sum + c end
+		if d then sum = sum + d end
+		if e then sum = sum + e end
+		return band(sum, 0xFFFFFFFF)
 	end
 
-	local function murmur2(input, seed)
-		local M = 0x5bd1e995
-		local h = bit32.bxor(seed, #input)
-		local i, len = 1, #input
-		while i + 3 <= len do
-			local k = input:byte(i) + input:byte(i+1)*256 + input:byte(i+2)*65536 + input:byte(i+3)*16777216
-			k = mul32(k, M)
-			k = bit32.bxor(k, bit32.rshift(k, 24))
-			k = mul32(k, M)
-			h = mul32(h, M)
-			h = bit32.bxor(h, k)
-			i = i + 4
+	local function sha256(msg)
+		local len = #msg
+		local bits = len * 8
+
+		-- Padding
+		msg = msg .. "\128"
+		while (#msg % 64) ~= 56 do msg = msg .. "\0" end
+		-- Append length as 64-bit big-endian
+		msg = msg .. string.char(
+			0, 0, 0, 0,
+			band(rshift(bits, 24), 0xFF), band(rshift(bits, 16), 0xFF),
+			band(rshift(bits, 8), 0xFF), band(bits, 0xFF)
+		)
+
+		local H = {
+			0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+			0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
+		}
+
+		for i = 1, #msg, 64 do
+			local W = {}
+			for t = 1, 16 do
+				local off = i + (t - 1) * 4
+				W[t] = lshift(msg:byte(off), 24) + lshift(msg:byte(off+1), 16)
+					 + lshift(msg:byte(off+2), 8) + msg:byte(off+3)
+			end
+			for t = 17, 64 do
+				local s0 = bxor(rrotate(W[t-15], 7), rrotate(W[t-15], 18), rshift(W[t-15], 3))
+				local s1 = bxor(rrotate(W[t-2], 17), rrotate(W[t-2], 19), rshift(W[t-2], 10))
+				W[t] = add32(W[t-16], s0, W[t-7], s1)
+			end
+
+			local a, b, c, d, e, f, g, h = H[1], H[2], H[3], H[4], H[5], H[6], H[7], H[8]
+			for t = 1, 64 do
+				local S1 = bxor(rrotate(e, 6), rrotate(e, 11), rrotate(e, 25))
+				local ch = bxor(band(e, f), band(bnot(e), g))
+				local temp1 = add32(h, S1, ch, K[t], W[t])
+				local S0 = bxor(rrotate(a, 2), rrotate(a, 13), rrotate(a, 22))
+				local maj = bxor(band(a, b), band(a, c), band(b, c))
+				local temp2 = add32(S0, maj)
+
+				h = g; g = f; f = e; e = add32(d, temp1)
+				d = c; c = b; b = a; a = add32(temp1, temp2)
+			end
+
+			H[1] = add32(H[1], a); H[2] = add32(H[2], b)
+			H[3] = add32(H[3], c); H[4] = add32(H[4], d)
+			H[5] = add32(H[5], e); H[6] = add32(H[6], f)
+			H[7] = add32(H[7], g); H[8] = add32(H[8], h)
 		end
-		local rem = len - i + 1
-		if rem >= 3 then h = bit32.bxor(h, input:byte(i+2) * 65536) end
-		if rem >= 2 then h = bit32.bxor(h, input:byte(i+1) * 256) end
-		if rem >= 1 then h = bit32.bxor(h, input:byte(i)); h = mul32(h, M) end
-		h = bit32.bxor(h, bit32.rshift(h, 13))
-		h = mul32(h, M)
-		h = bit32.bxor(h, bit32.rshift(h, 15))
-		return h
+
+		return string.format(
+			"%08x%08x%08x%08x%08x%08x%08x%08x",
+			H[1], H[2], H[3], H[4], H[5], H[6], H[7], H[8]
+		)
 	end
 
-	local input = "rf:" .. tostring(userId)
-	local h1 = murmur2(input, 0x9747b28c)
-	local h2 = murmur2(input, 0x5f4a0bc3)
-	return string.format("%08x%08x", h1, h2)
+	-- Prefix prevents bare-integer rainbow tables; SHA-256 is one-way.
+	-- The server applies a second HMAC layer with a secret before storage.
+	return sha256("sirius_analytics:" .. tostring(userId))
 end
 
 -- ── Collect system info once per instance ─────────────────────────────────────
