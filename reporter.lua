@@ -82,15 +82,14 @@ local function collectSystemInfo()
 end
 
 -- ── Find whichever HTTP function this executor exposes ────────────────────────
+-- Must match how rayfield.luau discovers these — bare globals, no rawget(_G),
+-- because executors inject into getgenv(), which may differ from _G.
 local function findRequestFunc()
-	for _, name in ipairs({ "request", "http_request" }) do
-		local fn = rawget(_G, name)
-		if type(fn) == "function" then return fn end
-	end
-	local syn = rawget(_G, "syn")
-	if type(syn) == "table" and type(syn.request) == "function" then
-		return syn.request
-	end
+	if syn and syn.request then return syn.request end
+	if fluxus and fluxus.request then return fluxus.request end
+	if http and http.request then return http.request end
+	if http_request then return http_request end
+	if request then return request end
 	return nil
 end
 
