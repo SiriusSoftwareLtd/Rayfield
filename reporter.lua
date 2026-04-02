@@ -281,12 +281,21 @@ function Analytics:windowCreated(data)
 		isMobile = self._system.is_mobile
 	end
 
+	local secureMode = false
+	local customAssetId = false
+	local ok2, result2 = pcall(function() return _getgenv().RAYFIELD_ASSET_ID end)
+	if ok2 and type(result2) == "number" then customAssetId = true end
+	local ok3, result3 = pcall(function() return _getgenv().RAYFIELD_SECURE end)
+	if ok3 and result3 then secureMode = true end
+
 	self:_send("window_created", data, {
-		theme          = data.theme and tostring(data.theme):sub(1, 64) or nil,
-		is_mobile      = isMobile,
-		has_key_system = data.has_key_system ~= nil and (data.has_key_system and true or false) or nil,
-		discord_invite = data.discord_invite and tostring(data.discord_invite):sub(1, 64) or nil,
-		config_saving  = data.config_saving ~= nil and (data.config_saving and true or false) or nil,
+		theme           = data.theme and tostring(data.theme):sub(1, 64) or nil,
+		is_mobile       = isMobile,
+		has_key_system  = data.has_key_system ~= nil and (data.has_key_system and true or false) or nil,
+		discord_invite  = data.discord_invite and tostring(data.discord_invite):sub(1, 64) or nil,
+		config_saving   = data.config_saving ~= nil and (data.config_saving and true or false) or nil,
+		secure_mode     = secureMode,
+		custom_asset_id = customAssetId,
 	})
 
 	self:_startKickWatcher(data)
