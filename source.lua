@@ -1296,7 +1296,12 @@ end
 
 local function Maximise()
 	Debounce = true
-	Topbar.ChangeSize.Image = "rbxassetid://"..10137941941
+	if Icons then
+		local asset = getIcon("maximize-2")
+		Topbar.ChangeSize.Image = "rbxassetid://"..asset.id
+		Topbar.ChangeSize.ImageRectOffset = asset.imageRectOffset
+		Topbar.ChangeSize.ImageRectSize = asset.imageRectSize
+	end
 
 	TweenService:Create(Topbar.UIStroke, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {ImageTransparency = 0.6}):Play()
@@ -1376,7 +1381,12 @@ end
 
 local function Minimise()
 	Debounce = true
-	Topbar.ChangeSize.Image = "rbxassetid://"..11036884234
+	if Icons then
+		local asset = getIcon("minimize-2")
+		Topbar.ChangeSize.Image = "rbxassetid://"..asset.id
+		Topbar.ChangeSize.ImageRectOffset = asset.imageRectOffset
+		Topbar.ChangeSize.ImageRectSize = asset.imageRectSize
+	end
 
 	Topbar.UIStroke.Color = SelectedTheme.ElementStroke
 
