@@ -79,12 +79,15 @@ end
 
 local _getgenv = rawget(_G, "getgenv")
 local requestsDisabled = false
+local customAssetId = nil
 if _getgenv then
 	local ok, result = pcall(function() return _getgenv().DISABLE_RAYFIELD_REQUESTS end)
 	if ok and result then requestsDisabled = true end
+	local ok2, result2 = pcall(function() return _getgenv().RAYFIELD_ASSET_ID end)
+	if ok2 and type(result2) == "number" then customAssetId = result2 end
 end
 local InterfaceBuild = '3K3W'
-local Release = "Build 1.71"
+local Release = "Build 1.72"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -667,7 +670,8 @@ local RayfieldLibrary = {
 
 -- Interface Management
 
-local Rayfield = useStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://10804731440")[1]
+local RayfieldAssetId = customAssetId or 10804731440
+local Rayfield = useStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
 local buildAttempts = 0
 local correctBuild = false
 local warned
@@ -689,7 +693,7 @@ repeat
 	end
 
 	local toDestroy
-	toDestroy, Rayfield = Rayfield, useStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://10804731440")[1]
+	toDestroy, Rayfield = Rayfield, useStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
 	if toDestroy and not useStudio then toDestroy:Destroy() end
 
 	buildAttempts = buildAttempts + 1
