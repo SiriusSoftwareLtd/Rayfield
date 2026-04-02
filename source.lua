@@ -90,6 +90,11 @@ if _getgenv then
 	if ok3 and result3 then secureMode = true end
 end
 
+if secureMode then
+	warn = function(...) end
+	print = function(...) end
+end
+
 local secureWarnings = {}
 local customAssets = {}
 
@@ -106,7 +111,7 @@ local function secureNotify(wType, title, content)
 	end)
 end
 local InterfaceBuild = 'UU1NX'
-local Release = "Build 1.74"
+local Release = "Build 1.741"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -815,6 +820,8 @@ do
 				local success, asset = pcall(getcustomasset, AssetPath.."/"..tostring(id)..".png")
 				if success then
 					customAssets[tostring(id)] = asset
+				else
+					warn("Rayfield | Failed to load custom asset: "..tostring(id).." - "..tostring(asset))
 				end
 			end
 		end)
