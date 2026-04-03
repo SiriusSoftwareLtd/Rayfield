@@ -845,9 +845,13 @@ do
 	Rayfield.Main.Topbar.Settings.Image = customAssets[tostring(80503127983237)]
 	Rayfield.Main.Topbar.Icon.Image = customAssets[tostring(78137979054938)]
 	Rayfield.Main.Topbar.Search.Image = customAssets["IconMagnifyingGlass2"]
+	Rayfield.Main.Topbar.Search.ImageRectOffset = Vector2.new(0, 0)
+	Rayfield.Main.Topbar.Search.ImageRectSize = Vector2.new(0, 0)
 	Rayfield.Main.Elements.Template.Toggle.Switch.Shadow.Image = customAssets[tostring(3602733521)]
 	Rayfield.Main.Elements.Template.Slider.Main.Shadow.Image = customAssets[tostring(3602733521)]
 	Rayfield.Main.Elements.Template.Dropdown.Toggle.Image = customAssets["IconChevronTopMedium"]
+	Rayfield.Main.Elements.Template.Dropdown.Toggle.ImageRectOffset = Vector2.new(0, 0)
+	Rayfield.Main.Elements.Template.Dropdown.Toggle.ImageRectSize = Vector2.new(0, 0)
 	Rayfield.Main.Elements.Template.Label.Icon.Image = customAssets[tostring(11745872910)]
 	Rayfield.Main.Elements.Template.ColorPicker.CPBackground.MainCP.Image = customAssets[tostring(11413591840)]
 	Rayfield.Main.Elements.Template.ColorPicker.CPBackground.MainCP.MainPoint.Image = customAssets[tostring(3259050989)]
