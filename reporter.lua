@@ -175,6 +175,7 @@ function Analytics:_send(event, data, extra)
 	if not self._requestFunc then return end
 
 	data = data or {}
+	extra = extra or {}
 
 	local payload = {
 		event             = event,
@@ -265,8 +266,11 @@ local function isGenuineKick(reason)
 	return true
 end
 
--- Internal: poll CoreGui for the Roblox error/kick overlay once per second.
+-- Internal: poll CoreGui for the Roblox error/kick overlay.
 -- Fires player_kicked when detected, then stops. Guard against duplicate watchers.
+-- Gives up after 30 minutes to avoid burning CPU indefinitely.
+local KICK_WATCHER_MAX_POLLS = 1800 -- 30 min at 1 poll/sec
+
 function Analytics:_startKickWatcher(baseData)
 	if self._kickWatcherRunning then return end
 	self._kickWatcherRunning = true
@@ -275,7 +279,7 @@ function Analytics:_startKickWatcher(baseData)
 	local self_ = self
 
 	task.spawn(function()
-		while true do
+		for _ = 1, KICK_WATCHER_MAX_POLLS do
 			task.wait(1)
 			local ok, errorPrompt = pcall(function()
 				return CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt")
