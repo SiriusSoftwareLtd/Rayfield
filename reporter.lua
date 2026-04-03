@@ -214,12 +214,55 @@ function Analytics:_send(event, data, extra)
 	end)
 end
 
--- Internal: parse disconnect type from a kick reason string
+-- ── Roblox error codes that indicate a genuine kick or ban ──────────────────
+-- Only these codes are tracked. Everything else (network drops, timeouts,
+-- server shutdowns) is silently ignored.
+local KICK_ERROR_CODES = {
+	[267] = true,  -- Player kicked via :Kick()
+	[268] = true,  -- Server kicked (unexpected client behavior / exploit)
+	[291] = true,  -- Player removed from DataModel
+	[600] = true,  -- In-experience ban API
+}
+
+-- Internal: extract Roblox error code from a kick message.
+-- Language-agnostic: just finds a standalone number (3+ digits) in the message,
+-- since the error code text varies by locale (e.g. "Error Code:", "Código de error:", etc.)
+local function extractErrorCode(reason)
+	for code in reason:gmatch("(%d%d%d+)") do
+		return tonumber(code)
+	end
+	return nil
+end
+
+-- Internal: classify disconnect type from a kick reason string
 local function parseDisconnectType(reason)
 	local lower = reason:lower()
 	if lower:find("ban") or lower:find("perm") then return "ban" end
-	if lower:find("internet connection") or lower:find("network") then return "network" end
 	return "kick"
+end
+
+-- Internal: determine if an error prompt represents a genuine kick we should track
+local function isGenuineKick(reason)
+	local code = extractErrorCode(reason)
+	if code then
+		-- Has an error code — only accept known kick codes
+		return KICK_ERROR_CODES[code] == true
+	end
+	-- No error code — reject network/connection/shutdown messages
+	local lower = reason:lower()
+	if lower:find("internet connection")
+		or lower:find("network")
+		or lower:find("connection lost")
+		or lower:find("timed? ?out")
+		or lower:find("shut down")
+		or lower:find("maintenance")
+		or lower:find("disconnected")
+		or lower:find("lost connection")
+		or lower:find("server is full")
+	then
+		return false
+	end
+	return true
 end
 
 -- Internal: poll CoreGui for the Roblox error/kick overlay once per second.
@@ -244,10 +287,13 @@ function Analytics:_startKickWatcher(baseData)
 				reason = errorPrompt.MessageArea.ErrorFrame.ErrorMessage.Text
 			end)
 
-			self_:_send("player_kicked", baseData or {}, {
-				kick_reason     = reason:sub(1, 256),
-				disconnect_type = parseDisconnectType(reason),
-			})
+			-- Only send genuine kicks, skip network drops / shutdowns
+			if isGenuineKick(reason) then
+				self_:_send("player_kicked", baseData or {}, {
+					kick_reason     = reason:sub(1, 256),
+					disconnect_type = parseDisconnectType(reason),
+				})
+			end
 			break
 		end
 		self_._kickWatcherRunning = false
