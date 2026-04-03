@@ -115,7 +115,7 @@ local function secureNotify(wType, title, content)
 	end)
 end
 local InterfaceBuild = 'UU2NX'
-local Release = "Build 1.744"
+local Release = "Build 1.745"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -779,10 +779,10 @@ do
 		["3259050989"] = AssetBaseURL.."3259050989.png?raw=true",
 		["3523728077"] = AssetBaseURL.."3523728077.png?raw=true",
 		["3602733521"] = AssetBaseURL.."3602733521.png?raw=true",
-		["3926305904"] = AssetBaseURL.."3926305904.png?raw=true",
+		["IconChevronTopMedium"] = AssetBaseURL.."IconChevronTopMedium.png?raw=true",
 		["4483362458"] = AssetBaseURL.."4483362458.png?raw=true",
 		["5587865193"] = AssetBaseURL.."5587865193.png?raw=true",
-		["8445471332"] = AssetBaseURL.."8445471332.png?raw=true",
+		["IconMagnifyingGlass2"] = AssetBaseURL.."IconMagnifyingGlass2.png?raw=true",
 	}
 
 	for id, _ in assetFiles do
@@ -844,10 +844,10 @@ do
 	Rayfield.Main.Topbar.ChangeSize.Image = customAssets[tostring(10137941941)]
 	Rayfield.Main.Topbar.Settings.Image = customAssets[tostring(80503127983237)]
 	Rayfield.Main.Topbar.Icon.Image = customAssets[tostring(78137979054938)]
-	Rayfield.Main.Topbar.Search.Image = customAssets[tostring(8445471332)]
+	Rayfield.Main.Topbar.Search.Image = customAssets["IconMagnifyingGlass2"]
 	Rayfield.Main.Elements.Template.Toggle.Switch.Shadow.Image = customAssets[tostring(3602733521)]
 	Rayfield.Main.Elements.Template.Slider.Main.Shadow.Image = customAssets[tostring(3602733521)]
-	Rayfield.Main.Elements.Template.Dropdown.Toggle.Image = customAssets[tostring(3926305904)]
+	Rayfield.Main.Elements.Template.Dropdown.Toggle.Image = customAssets["IconChevronTopMedium"]
 	Rayfield.Main.Elements.Template.Label.Icon.Image = customAssets[tostring(11745872910)]
 	Rayfield.Main.Elements.Template.ColorPicker.CPBackground.MainCP.Image = customAssets[tostring(11413591840)]
 	Rayfield.Main.Elements.Template.ColorPicker.CPBackground.MainCP.MainPoint.Image = customAssets[tostring(3259050989)]
@@ -859,19 +859,6 @@ do
 	Rayfield.Notifications.Template.Shadow.Image = customAssets[tostring(3523728077)]
 	Rayfield.Loading.Banner.Image = customAssets[tostring(111263549366178)]
 
-	-- getcustomasset content resolves asynchronously and resets ImageRectOffset/ImageRectSize
-	-- Reapply rect values after short delays to ensure they stick
-	task.spawn(function()
-		local search = Rayfield.Main.Topbar.Search
-		local toggle = Rayfield.Main.Elements.Template.Dropdown.Toggle
-		for _ = 1, 5 do
-			task.wait(0.1)
-			search.ImageRectOffset = Vector2.new(204, 104)
-			search.ImageRectSize = Vector2.new(96, 96)
-			toggle.ImageRectOffset = Vector2.new(564, 284)
-			toggle.ImageRectSize = Vector2.new(36, 36)
-		end
-	end)
 end -- custom asset block
 
 local minSize = Vector2.new(1024, 768)
