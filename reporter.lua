@@ -260,6 +260,7 @@ local function isGenuineKick(reason)
 		or lower:find("disconnected")
 		or lower:find("lost connection")
 		or lower:find("server is full")
+		or lower:find("key")
 	then
 		return false
 	end
