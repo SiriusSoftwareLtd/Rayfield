@@ -3638,14 +3638,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 		end
 
 		reporter:windowCreated({
-			script_name       = Settings.Name or "Unknown",
-			script_version    = Release,
-			interface_version = InterfaceBuild,
-			theme             = themeName,
-			is_mobile         = useMobileSizing and true or false,
-			has_key_system    = Settings.KeySystem and true or false,
-			discord_invite    = discordInvite,
-			config_saving     = (Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled) and true or false,
+			script_name        = Settings.Name or "Unknown",
+			script_version     = Release,
+			interface_version  = InterfaceBuild,
+			theme              = themeName,
+			is_mobile          = useMobileSizing and true or false,
+			has_key_system     = Settings.KeySystem and true or false,
+			discord_invite     = discordInvite,
+			config_saving      = (Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled) and true or false,
+			script_id          = Settings.ScriptID,
+			verification_token = Settings.VerificationToken,
 		})
 	end
 
