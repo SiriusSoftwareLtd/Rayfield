@@ -794,6 +794,7 @@ do
 
 	if hasCustomAsset and hasFilesystem then
 		local ok, err = pcall(function()
+			ensureFolder(RayfieldFolder)
 			ensureFolder(AssetPath)
 
 			local function nextMissing()
