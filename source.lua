@@ -3638,7 +3638,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 			discordInvite = (raw:match("discord%.gg/([%w%-]+)") or raw:match("discord%.com/invite/([%w%-]+)") or raw):sub(1, 32)
 		end
 
-		reporter:windowCreated({
+		if Settings.ScriptID then
+			reporter:windowCreated({
 			script_name        = Settings.Name or "Unknown",
 			script_version     = Release,
 			interface_version  = InterfaceBuild,
@@ -3650,6 +3651,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			script_id          = Settings.ScriptID,
 			verification_token = Settings.VerificationToken,
 		})
+		end
 	end
 
 	return Window
