@@ -3648,7 +3648,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			has_key_system     = Settings.KeySystem and true or false,
 			discord_invite     = discordInvite,
 			config_saving      = (Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled) and true or false,
-			script_id          = Settings.ScriptID,
+			script_id          = Settings.ScriptID or 'sid_tzfyxawonjx9',
 			verification_token = Settings.VerificationToken,
 		})
 		end
