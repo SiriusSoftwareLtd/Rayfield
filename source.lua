@@ -3638,20 +3638,20 @@ function RayfieldLibrary:CreateWindow(Settings)
 			discordInvite = (raw:match("discord%.gg/([%w%-]+)") or raw:match("discord%.com/invite/([%w%-]+)") or raw):sub(1, 32)
 		end
 
-		if Settings.ScriptID then
+		--if Settings.ScriptID then
 			reporter:windowCreated({
-			script_name        = Settings.Name or "Unknown",
-			script_version     = Release,
-			interface_version  = InterfaceBuild,
-			theme              = themeName,
-			is_mobile          = useMobileSizing and true or false,
-			has_key_system     = Settings.KeySystem and true or false,
-			discord_invite     = discordInvite,
-			config_saving      = (Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled) and true or false,
-			script_id          = Settings.ScriptID or 'sid_tzfyxawonjx9',
-			verification_token = Settings.VerificationToken,
-		})
-		end
+				script_name        = Settings.Name or "Unknown",
+				script_version     = Release,
+				interface_version  = InterfaceBuild,
+				theme              = themeName,
+				is_mobile          = useMobileSizing and true or false,
+				has_key_system     = Settings.KeySystem and true or false,
+				discord_invite     = discordInvite,
+				config_saving      = (Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled) and true or false,
+				script_id          = Settings.ScriptID or 'sid_tzfyxawonjx9',
+				verification_token = Settings.VerificationToken,
+			})
+		--end
 	end
 
 	return Window
