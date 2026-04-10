@@ -290,6 +290,7 @@ function Analytics:_send(event, data, extra)
 		script_name = (data.script_name and tostring(data.script_name):sub(1, 128)) or nil,
 		script_version = (data.script_version and tostring(data.script_version):sub(1, 64)) or nil,
 		interface_version = (data.interface_version and tostring(data.interface_version):sub(1, 64)) or nil,
+		script_id = (data.script_id and tostring(data.script_id):sub(1, 20)) or nil,
 		place_id = self._system.place_id,
 		universe_id = self._system.universe_id,
 		executor = self._system.executor,
