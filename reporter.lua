@@ -190,7 +190,7 @@ local function collectSystemInfo()
 		executor = "Unknown",
 		executor_version = "",
 		user_id = "",
-		platform = "pc", -- "pc" | "mobile" | "console"
+		platform = "Computer", -- "pc" | "mobile" | "console"
 		is_mobile = false, -- derived from platform, used as fallback
 		locale = "",
 	}
@@ -212,10 +212,10 @@ local function collectSystemInfo()
 
 	pcall(function()
 		if GuiService:IsTenFootInterface() then
-			info.platform = "console"
+			info.platform = "Console"
 			info.is_mobile = false
 		elseif UserInputService.TouchEnabled then
-			info.platform = "mobile"
+			info.platform = "Mobile"
 			info.is_mobile = true
 		end
 	end)
