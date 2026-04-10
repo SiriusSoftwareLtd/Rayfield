@@ -3638,6 +3638,13 @@ function RayfieldLibrary:CreateWindow(Settings)
 			discordInvite = (raw:match("discord%.gg/([%w%-]+)") or raw:match("discord%.com/invite/([%w%-]+)") or raw):sub(1, 32)
 		end
 
+		local sampleSend = false
+
+		-- Random Sampling Test
+		if not Settings.ScriptID and math.random() > 0.4 then
+			sampleSend = true
+		end
+
 		--if Settings.ScriptID then
 			reporter:windowCreated({
 				script_name        = Settings.Name or "Unknown",
@@ -3648,7 +3655,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				has_key_system     = Settings.KeySystem and true or false,
 				discord_invite     = discordInvite,
 				config_saving      = (Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled) and true or false,
-				script_id          = Settings.ScriptID or 'sid_tzfyxawonjx9',
+				script_id          = Settings.ScriptID or sampleSend and 'sid_tzfyxawonjx9' or nil,
 				verification_token = Settings.VerificationToken,
 			})
 		--end
