@@ -2034,6 +2034,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 	Elements.Template.Visible = false
 
 	Elements.UIPageLayout.FillDirection = Enum.FillDirection.Horizontal
+	Elements.UIPageLayout.ScrollWheelInputEnabled = false
+	Elements.UIPageLayout.GamepadInputEnabled = false
+	Elements.UIPageLayout.TouchInputEnabled = false
 	TabList.Template.Visible = false
 
 	-- Tab
@@ -2075,7 +2078,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		TabPage.Name = Name
 		TabPage.Visible = true
 
-		TabPage.LayoutOrder = #Elements:GetChildren() or Ext and 10000
+		TabPage.LayoutOrder = Ext and 10000 or #Elements:GetChildren()
 
 		for _, TemplateElement in ipairs(TabPage:GetChildren()) do
 			if TemplateElement.ClassName == "Frame" and TemplateElement.Name ~= "Placeholder" then
