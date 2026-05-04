@@ -1650,6 +1650,7 @@ local function createSettings(window)
 	end
 
 	settingsCreated = true
+    settingsInitialized = false -- Me Added this idk why
 	loadSettings()
 	saveSettings()
 end
@@ -3073,7 +3074,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			local Keybind = Elements.Template.Keybind:Clone()
 			Keybind.Name = KeybindSettings.Name
 			Keybind.Title.Text = KeybindSettings.Name
-			Keybind.Visible = true
+			Keybind.Visible = KeybindSettings.Visibility
 			Keybind.Parent = TabPage
 
 			Keybind.BackgroundTransparency = 1
@@ -3171,6 +3172,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Keybind.KeybindFrame.KeybindBox:GetPropertyChangedSignal("Text"):Connect(function()
 				TweenService:Create(Keybind.KeybindFrame, TweenInfo.new(0.55, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(0, Keybind.KeybindFrame.KeybindBox.TextBounds.X + 24, 0, 30)}):Play()
 			end)
+
+            function KeybindSettings:SetVisibility(bool) -- Allows change visibility for keybind
+                Keybind.Visible = bool
+            end
 
 			function KeybindSettings:Set(NewKeybind)
 				Keybind.KeybindFrame.KeybindBox.Text = tostring(NewKeybind)
@@ -3376,7 +3381,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			local Slider = Elements.Template.Slider:Clone()
 			Slider.Name = SliderSettings.Name
 			Slider.Title.Text = SliderSettings.Name
-			Slider.Visible = true
+			Slider.Visible = SliderSettings.Visibility -- To set
 			Slider.Parent = TabPage
 
 			Slider.BackgroundTransparency = 1
@@ -3493,6 +3498,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 					end
 				end)
 			end)
+
+            function SliderSettings:SetVisibility(bool)
+                Slider.Visible = bool
+            end
 
 			function SliderSettings:Set(NewVal)
 				local NewVal = math.clamp(NewVal, SliderSettings.Range[1], SliderSettings.Range[2])
