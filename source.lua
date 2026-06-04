@@ -77,16 +77,15 @@ local function loadWithTimeout(url: string, timeout: number?): ...any
 	return if success then result else nil
 end
 
-local _getgenv = rawget(_G, "getgenv")
 local requestsDisabled = false
 local customAssetId = nil
 local secureMode = false
-if _getgenv then
-	local ok, result = pcall(function() return _getgenv().DISABLE_RAYFIELD_REQUESTS end)
+if getgenv then
+	local ok, result = pcall(function() return getgenv().DISABLE_RAYFIELD_REQUESTS end)
 	if ok and result then requestsDisabled = true end
-	local ok2, result2 = pcall(function() return _getgenv().RAYFIELD_ASSET_ID end)
+	local ok2, result2 = pcall(function() return getgenv().RAYFIELD_ASSET_ID end)
 	if ok2 and type(result2) == "number" then customAssetId = result2 end
-	local ok3, result3 = pcall(function() return _getgenv().RAYFIELD_SECURE end)
+	local ok3, result3 = pcall(function() return getgenv().RAYFIELD_SECURE end)
 	if ok3 and result3 then secureMode = true end
 end
 
@@ -226,27 +225,25 @@ local function loadSettings()
 			return
 		end
 
+		-- Check if settings file has any entries
 		if next(file) ~= nil then
-			for categoryName, settingCategory in pairs(settingsTable) do
-				if file[categoryName] then
-					for settingName, setting in pairs(settingCategory) do
-						if file[categoryName][settingName] then
-							setting.Value = file[categoryName][settingName].Value
-							setting.Element:Set(getSetting(categoryName, settingName))
-						end
+			-- If it does, apply them
+			for categoryName, categoryTable in file do
+				for settingName, setting in categoryTable do
+					local settingType = typeof(settingsTable[categoryName][settingName].Value)
+					-- Make sure setting has the correct type
+					if not (settingType == typeof(setting.Value)) then
+						warn("Rayfield | Error parsing settings file. '"..settingName.."' must be a "..settingType)
+						continue
 					end
+					settingsTable[categoryName][settingName].Value = setting.Value
 				end
 			end
-		-- If no settings saved, apply overridden settings only
-		else
-			for settingName, settingValue in overriddenSettings do
-				local split = string.split(settingName, ".")
-				assert(#split == 2, "Rayfield | Invalid overridden setting name: " .. settingName)
-				local categoryName = split[1]
-				local settingNameOnly = split[2]
-				if settingsTable[categoryName] and settingsTable[categoryName][settingNameOnly] then
-					settingsTable[categoryName][settingNameOnly].Element:Set(settingValue)
-				end
+		end
+		-- Apply the actual setting value to UI elements
+		for categoryName, categoryTable in settingsTable do
+			for settingName, setting in categoryTable do
+				setting.Element:Set(getSetting(categoryName, settingName))
 			end
 		end
 		settingsInitialized = true
