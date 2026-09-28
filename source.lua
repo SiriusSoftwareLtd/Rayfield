@@ -114,7 +114,7 @@ local function secureNotify(wType, title, content)
 	end)
 end
 local InterfaceBuild = 'UU2NX'
-local Release = "Build 1.749"
+local Release = "Build 1.750"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -292,11 +292,138 @@ if not requestsDisabled and not useStudio then
 	end
 end
 
--- only ping ~1 in 10 runs (heartbeat-per-execution got expensive)
-if not useStudio and math.random(10) == 1 then
-	task.spawn(function()
-		pcall((game :: any).HttpGet, game, "https://www.sentivel.com/api/heartbeat/81074364b461f8da81bad6fdc363c3b927f884d6fc28d806a15ee50ca1e68c78")
+-- Sentivel heartbeats. A heartbeat monitor is a dead-man's switch: it stays green while pings keep
+-- arriving and alarms once they stop. Rayfield pings its own below, and a window made with
+-- Settings.Heartbeat pings the developer's own for as long as it's up. Best-effort throughout: a
+-- ping never throws or blocks. Only a bad link, or a token Sentivel doesn't know, warns, since
+-- either would otherwise look exactly like an outage. Secure mode silences those like any warn.
+local HEARTBEAT_BASE = "https://www.sentivel.com/api/heartbeat/"
+
+-- Seconds between a window's pings. A monitor expecting a ping every 5 minutes, with a little
+-- grace, stays green for as long as anyone has the script open.
+local HEARTBEAT_PERIOD = 300
+
+-- Consecutive 404s before a loop gives up. Sentivel answers 404 for a token it doesn't know, which
+-- never recovers, but one stray 404 from a bad deploy shouldn't silence every session.
+local HEARTBEAT_GIVE_UP = 3
+
+-- the loop that currently owns each ping URL. a newer window on the same link takes it over and
+-- the older loop retires when it next wakes, so the link is never pinged twice over, and a window
+-- rebuilt straight after Destroy isn't turned away by a loop that's still asleep
+local heartbeatOwners = {}
+
+-- A full ping URL or its bare token, to the canonical URL. nil and a reason when it isn't one.
+local function resolveHeartbeat(target: any): (string?, string?)
+	if type(target) ~= "string" then
+		return nil, "Heartbeat takes your Sentivel ping URL or token as a string, got " .. typeof(target)
+	end
+	-- a real link is under 100 characters; this keeps the trim below cheap on anything absurd
+	if #target > 512 then
+		return nil, "Heartbeat is far too long to be a Sentivel ping URL. Copy the ping URL and try again"
+	end
+
+	-- a copy out of Discord or a browser can drag along no-break and zero-width spaces, which %s
+	-- doesn't cover
+	local cleaned = string.gsub(string.gsub(target, "\194\160", " "), "\226\128\139", "")
+	cleaned = string.gsub(cleaned, "\239\187\191", "")
+	local trimmed = string.match(cleaned, "^%s*(.-)%s*$") :: string
+	if trimmed == "" then
+		return nil, "Heartbeat is empty. Paste the ping URL from your Sentivel heartbeat monitor"
+	end
+
+	-- a link pasted without its scheme is still a link
+	if not string.find(trimmed, "://", 1, true) and string.find(trimmed, "/", 1, true) then
+		trimmed = "https://" .. trimmed
+	end
+
+	local token = trimmed
+	if string.find(trimmed, "://", 1, true) then
+		-- host first, on its own, so a Sentivel link that's just the wrong page is told that. the
+		-- default port and a fully qualified trailing dot name the same host
+		local host, rest = string.match(trimmed, "^[Hh][Tt][Tt][Pp][Ss]?://([^/?#]+)(.*)$")
+		local bare = if host then string.gsub(string.gsub(string.lower(host), ":443$", ""), "%.$", "") else nil
+		if bare ~= "sentivel.com" and bare ~= "www.sentivel.com" then
+			return nil, "Heartbeat only pings Sentivel. Use the ping URL from your heartbeat monitor"
+		end
+		local found = string.match(rest or "", "^/api/heartbeat/([^/?#]+)/?$")
+		if not found then
+			return nil, "That Sentivel link isn't a heartbeat ping URL. It should look like " .. HEARTBEAT_BASE .. "<token>"
+		end
+		token = found
+	end
+
+	-- tokens are hex. the bounds are loose so a future token format still passes; a monitor id (a
+	-- UUID, so it has dashes) falls outside them and is told why
+	if #token < 32 or #token > 128 or not string.match(token, "^%x+$") then
+		if string.match(token, "^%x+%-%x+%-%x+%-%x+%-%x+$") then
+			return nil, "That looks like a monitor ID. Heartbeat needs the monitor's ping URL, not its ID"
+		end
+		return nil, "That doesn't look like a Sentivel heartbeat token. Copy the whole ping URL and try again"
+	end
+
+	-- always www: the bare domain answers with a redirect, one more round trip per ping. and
+	-- lowercase: Sentivel issues lowercase tokens and matches them exactly
+	return HEARTBEAT_BASE .. string.lower(token), nil
+end
+
+-- One ping. The HTTP status when it can be seen, otherwise nil. The request function hands the
+-- status back; HttpGet throws on a failed request instead, so a 404 is read out of its error.
+-- Yields, so call it from its own thread.
+local function sendHeartbeat(url: string): number?
+	if requestFunc then
+		local ok, response = pcall(requestFunc, { Url = url, Method = "GET" })
+		-- some executors hand the status back as a string
+		return if ok and type(response) == "table" then tonumber(response.StatusCode) else nil
+	end
+	local ok, err = pcall(function()
+		return (game :: any):HttpGet(url)
 	end)
+	if not ok and string.find(tostring(err), "404", 1, true) then
+		return 404
+	end
+	return nil
+end
+
+-- Ping `target` now and every HEARTBEAT_PERIOD after, for as long as `alive` says so. false when
+-- the link is bad (which warns), or when running in Studio, where playtests aren't real runs.
+local function startHeartbeat(target: any, alive: () -> boolean): boolean
+	local url, reason = resolveHeartbeat(target)
+	if not url then
+		warn("Rayfield | " .. tostring(reason) .. ".")
+		return false
+	end
+	if useStudio then
+		return false
+	end
+
+	local resolved = url :: string
+	local owner = {}
+	heartbeatOwners[resolved] = owner
+	-- deferred rather than spawned: spawning runs the first ping right away, and a request that
+	-- blocks without yielding would hold CreateWindow up for a whole round trip
+	task.defer(function()
+		local notFound = 0
+		while heartbeatOwners[resolved] == owner and alive() do
+			-- a 404 is Sentivel saying the token names no heartbeat (deleted, regenerated, or
+			-- mistyped into another valid-looking one). once it keeps saying so, stop asking
+			notFound = if sendHeartbeat(resolved) == 404 then notFound + 1 else 0
+			if notFound >= HEARTBEAT_GIVE_UP then
+				warn("Rayfield | Sentivel doesn't recognise this heartbeat, so pings have stopped. Check the ping URL.")
+				break
+			end
+			task.wait(HEARTBEAT_PERIOD)
+		end
+		if heartbeatOwners[resolved] == owner then
+			heartbeatOwners[resolved] = nil
+		end
+	end)
+	return true
+end
+
+-- only ping ~1 in 10 runs (heartbeat-per-execution got expensive), and never when the developer
+-- has turned Rayfield's own requests off
+if not requestsDisabled and not useStudio and math.random(10) == 1 then
+	task.defer(sendHeartbeat, HEARTBEAT_BASE .. "81074364b461f8da81bad6fdc363c3b927f884d6fc28d806a15ee50ca1e68c78")
 end
 
 local promptUser = 2
@@ -2032,6 +2159,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 	if Settings.KeySystem then
 		repeat task.wait() until Passthrough
 		if rayfieldDestroyed then return end
+	end
+
+	-- the developer's own Sentivel heartbeat, pinged for as long as this interface is up. Started
+	-- only once the key system has let the player through, so a player sat at the key prompt isn't
+	-- counted as running the script. A re-executed script renames this interface "Rayfield-Old"
+	-- rather than destroying it, so that ends the loop too.
+	if Settings.Heartbeat ~= nil then
+		startHeartbeat(Settings.Heartbeat, function()
+			return not rayfieldDestroyed and Rayfield.Parent ~= nil and Rayfield.Name ~= "Rayfield-Old"
+		end)
 	end
 
 	Notifications.Template.Visible = false
