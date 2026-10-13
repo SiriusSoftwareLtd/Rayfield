@@ -24,7 +24,7 @@ end
 -- Remote modules are fetched from a fixed commit rather than a branch, so what runs is exactly what
 -- was reviewed and a push to a branch can't change it under every running script. Bump these to
 -- ship a new reporter, icon set or prompt.
-local RAYFIELD_COMMIT = "7c8395ecde0e6682b8d647aebf12433505240919" -- SiriusSoftwareLtd/Rayfield: reporter.lua, icons.lua
+local RAYFIELD_COMMIT = "3ef72398fb4c8ba6fd1801e98704991d3cc9cbc2" -- SiriusSoftwareLtd/Rayfield: reporter.lua, icons.lua
 local SIRIUS_COMMIT = "da80aa6888b26319d050c80c3499206d8b6f9e66" -- SiriusSoftwareLtd/Sirius: prompt.lua
 local RAYFIELD_RAW = "https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/" .. RAYFIELD_COMMIT .. "/"
 local SIRIUS_RAW = "https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/" .. SIRIUS_COMMIT .. "/"
