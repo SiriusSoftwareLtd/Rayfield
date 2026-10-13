@@ -285,7 +285,7 @@ end
 
 -- Internal: merge base payload with event-specific fields and fire-and-forget
 function Analytics:_send(event, data, extra)
-	if not self._requestFunc then
+	if not self._requestFunc or self._disabled then
 		return
 	end
 
@@ -415,10 +415,12 @@ function Analytics:_startKickWatcher(baseData)
 				reason = errorPrompt.MessageArea.ErrorFrame.ErrorMessage.Text
 			end)
 
-			-- Only send genuine kicks, skip network drops / shutdowns
+			-- Only send genuine kicks, skip network drops / shutdowns. The message itself never
+			-- leaves the client: a game's kick text can carry anything, including the player's
+			-- name, so only the Roblox error code and kick/ban are sent.
 			if isGenuineKick(reason) then
 				self_:_send("player_kicked", baseData or {}, {
-					kick_reason = reason:sub(1, 256),
+					error_code = extractErrorCode(reason),
 					disconnect_type = parseDisconnectType(reason),
 				})
 			end
@@ -510,6 +512,16 @@ end
 --]]
 function Analytics:watchForKick(data)
 	self:_startKickWatcher(data)
+end
+
+--[[
+	reporter:disable()
+
+	Stops this reporter sending anything further, including a kick watcher that is already armed.
+	Call it when the user turns analytics off mid-session.
+--]]
+function Analytics:disable()
+	self._disabled = true
 end
 
 return Analytics

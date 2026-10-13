@@ -21,6 +21,14 @@ local function getService(name)
 	return if cloneref then cloneref(service) else service
 end
 
+-- Remote modules are fetched from a fixed commit rather than a branch, so what runs is exactly what
+-- was reviewed and a push to a branch can't change it under every running script. Bump these to
+-- ship a new reporter, icon set or prompt.
+local RAYFIELD_COMMIT = "7c8395ecde0e6682b8d647aebf12433505240919" -- SiriusSoftwareLtd/Rayfield: reporter.lua, icons.lua
+local SIRIUS_COMMIT = "da80aa6888b26319d050c80c3499206d8b6f9e66" -- SiriusSoftwareLtd/Sirius: prompt.lua
+local RAYFIELD_RAW = "https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/" .. RAYFIELD_COMMIT .. "/"
+local SIRIUS_RAW = "https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/" .. SIRIUS_COMMIT .. "/"
+
 -- Services
 local UserInputService = getService("UserInputService")
 local TweenService = getService("TweenService")
@@ -127,7 +135,12 @@ local settingsTable = {
 
 	},
 	System = {
-		usageAnalytics = {Type = 'toggle', Value = true, Name = 'Anonymised Analytics'},
+		usageAnalytics = {
+			Type = 'toggle',
+			Value = true,
+			Name = 'Usage Analytics (pseudonymous)',
+			Description = 'Sends a hashed user ID, executor, game, locale and script details when a window opens, plus kick error codes. Nothing you type. sirius.menu/privacy',
+		},
 	}
 }
 
@@ -159,7 +172,7 @@ local useStudio = RunService:IsStudio() or false
 
 local settingsCreated = false
 local settingsInitialized = false -- Whether the UI elements in the settings page have been set to the proper values
-local prompt = useStudio and require(script.Parent.prompt) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua')
+local prompt = useStudio and require(script.Parent.prompt) or loadWithTimeout(SIRIUS_RAW .. 'prompt.lua')
 local requestFunc = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
 -- Validate prompt loaded correctly
@@ -205,7 +218,7 @@ local function loadSettings()
 		-- for debug in studio
 		if useStudio then
 			file = [[
-	{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":false,"Callback":null}}}}
+	{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Usage Analytics (pseudonymous)","Element":{"Ext":true,"Name":"Usage Analytics (pseudonymous)","Set":null,"CurrentValue":false,"Callback":null}}}}
 ]]
 		end
 
@@ -272,9 +285,17 @@ end
 
 local ANALYTICS_TOKEN = "05de7f9fd320d3b8428cd1c77014a337b85b6c8efee2c5914f5ab5700c354b9a"
 
+-- The reporter is fetched only at the moment it is about to be used, and only if the user hasn't
+-- opted out and the developer hasn't set DISABLE_RAYFIELD_REQUESTS. Opting out means no request to
+-- GitHub for it either, not just no event sent.
 local reporter = nil
-if not requestsDisabled and not useStudio then
-	local fetchSuccess, fetchResult = pcall((game :: any).HttpGet, game, "https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/reporter.lua")
+local reporterLoaded = false
+local function loadReporter()
+	if reporterLoaded then return reporter end
+	reporterLoaded = true
+	if requestsDisabled or useStudio then return nil end
+
+	local fetchSuccess, fetchResult = pcall((game :: any).HttpGet, game, RAYFIELD_RAW .. "reporter.lua")
 	if fetchSuccess and #fetchResult > 0 then
 		local execSuccess, Analytics = pcall(function()
 			return (loadstring(fetchResult) :: any)()
@@ -290,6 +311,16 @@ if not requestsDisabled and not useStudio then
 			end)
 		end
 	end
+	return reporter
+end
+
+-- Whether analytics may be sent right now. A saved opt-out is only known once the settings file has
+-- been applied, so until then the answer is no; an executor that can't read files has nothing saved
+-- to respect, so the default applies there.
+local function analyticsAllowed(): boolean
+	if requestsDisabled or useStudio then return false end
+	if not getSetting("System", "usageAnalytics") then return false end
+	return settingsInitialized or not (isfile and readfile)
 end
 
 -- Sentivel heartbeats. A heartbeat monitor is a dead-man's switch: it stays green while pings keep
@@ -1042,7 +1073,7 @@ Rayfield.DisplayOrder = 100
 LoadingFrame.Version.Text = Release
 
 -- Thanks to Latte Softworks for the Lucide integration for Roblox
-local Icons = useStudio and require(script.Parent.icons) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua')
+local Icons = useStudio and require(script.Parent.icons) or loadWithTimeout(RAYFIELD_RAW .. 'icons.lua')
 -- Variables
 
 local CFileName = nil
@@ -1736,6 +1767,11 @@ local function updateSetting(category: string, setting: string, value: any)
 	settingsTable[category][setting].Value = value
 	overriddenSettings[category .. "." .. setting] = nil -- If user changes an overriden setting, remove the override
 	saveSettings()
+
+	-- Turning analytics off mid-session also stops anything already armed, like the kick watcher.
+	if category == "System" and setting == "usageAnalytics" and not value and reporter and reporter.disable then
+		pcall(reporter.disable, reporter)
+	end
 end
 
 local function createSettings(window)
@@ -1781,6 +1817,9 @@ local function createSettings(window)
 						updateSetting(categoryName, settingName, Value)
 					end,
 				})
+				if setting.Description then
+					newTab:CreateLabel(setting.Description)
+				end
 			elseif setting.Type == 'bind' then
 				setting.Element = newTab:CreateKeybind({
 					Name = setting.Name,
@@ -3785,7 +3824,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	if not success then warn('Rayfield had an issue creating settings.') end
 
 	-- Report after createSettings so loadSettings() has run and usageAnalytics reflects the user's saved preference
-	if reporter and getSetting("System", "usageAnalytics") then
+	if analyticsAllowed() and loadReporter() then
 		local themeName = "Default"
 		if Settings.Theme then
 			if type(Settings.Theme) == "string" then
