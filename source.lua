@@ -10,6 +10,25 @@
 
 ]]
 
+-- Read first, so secure mode covers Rayfield's output from its first line.
+local secureMode = false
+if getgenv then
+	local ok, result = pcall(function() return getgenv().RAYFIELD_SECURE end)
+	if ok and result then secureMode = true end
+end
+
+-- Rayfield's own console output goes through these locals. Under secure mode they are silent.
+-- They are never assigned as globals: in an executor those are shared with every other script.
+local warn, print, error, assert = warn, print, error, assert
+if secureMode then
+	local rawError = error
+	local rawAssert = assert
+	warn = function(...) end
+	print = function(...) end
+	error = function(_, level) rawError("", level) end
+	assert = function(v, ...) return rawAssert(v) end
+end
+
 if debugX then
 	warn('Initialising Rayfield')
 end
@@ -22,18 +41,23 @@ local function getService(name)
 end
 
 -- Remote modules are fetched from a fixed commit rather than a branch, so what runs is exactly what
--- was reviewed and a push to a branch can't change it under every running script. Bump these to
--- ship a new reporter, icon set or prompt.
+-- was reviewed and a push to a branch can't change it under every running script. Bump this to
+-- ship a new reporter or icon set. sirius-gate pins its reporter to the same commit.
 local RAYFIELD_COMMIT = "3ef72398fb4c8ba6fd1801e98704991d3cc9cbc2" -- SiriusSoftwareLtd/Rayfield: reporter.lua, icons.lua
-local SIRIUS_COMMIT = "da80aa6888b26319d050c80c3499206d8b6f9e66" -- SiriusSoftwareLtd/Sirius: prompt.lua
 local RAYFIELD_RAW = "https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/" .. RAYFIELD_COMMIT .. "/"
-local SIRIUS_RAW = "https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/" .. SIRIUS_COMMIT .. "/"
 
 -- Services
 local UserInputService = getService("UserInputService")
 local TweenService = getService("TweenService")
 local Players = getService("Players")
 local CoreGui = getService("CoreGui")
+
+-- Some executors have no task.cancel. Without it the thread is left to finish on its own.
+local function cancelThread(thread: thread)
+	if task.cancel then
+		pcall(task.cancel, thread)
+	end
+end
 
 -- Loads and executes a function hosted on a remote URL. Cancels the request if the requested URL takes too long to respond.
 -- Errors with the function are caught and logged to the output
@@ -65,7 +89,7 @@ local function loadWithTimeout(url: string, timeout: number?): ...any
 	local timeoutThread = task.delay(timeout, function()
 		if not requestCompleted then
 			warn("Request for " .. url .. " timed out after " .. tostring(timeout) .. " seconds")
-			task.cancel(requestThread)
+			cancelThread(requestThread)
 			result = "Request timed out"
 			requestCompleted = true
 		end
@@ -77,7 +101,7 @@ local function loadWithTimeout(url: string, timeout: number?): ...any
 	end
 	-- Cancel timeout thread if still running when request completes
 	if coroutine.status(timeoutThread) ~= "dead" then
-		task.cancel(timeoutThread)
+		cancelThread(timeoutThread)
 	end
 	if not success then
 		warn("Failed to process " .. tostring(url) .. ": " .. tostring(result))
@@ -86,24 +110,15 @@ local function loadWithTimeout(url: string, timeout: number?): ...any
 end
 
 local requestsDisabled = false
+local analyticsOptOut = false -- the player set getgenv().RAYFIELD_ANALYTICS = false
 local customAssetId = nil
-local secureMode = false
 if getgenv then
 	local ok, result = pcall(function() return getgenv().DISABLE_RAYFIELD_REQUESTS end)
 	if ok and result then requestsDisabled = true end
 	local ok2, result2 = pcall(function() return getgenv().RAYFIELD_ASSET_ID end)
 	if ok2 and type(result2) == "number" then customAssetId = result2 end
-	local ok3, result3 = pcall(function() return getgenv().RAYFIELD_SECURE end)
-	if ok3 and result3 then secureMode = true end
-end
-
-if secureMode then
-	local _error = error
-	local _assert = assert
-	warn = function(...) end
-	print = function(...) end
-	error = function(_, level) _error("", level) end
-	assert = function(v, ...) return _assert(v) end
+	local ok3, result3 = pcall(function() return getgenv().RAYFIELD_ANALYTICS end)
+	if ok3 and result3 == false then analyticsOptOut = true end
 end
 
 local secureWarnings = {}
@@ -122,7 +137,7 @@ local function secureNotify(wType, title, content)
 	end)
 end
 local InterfaceBuild = 'UU2NX'
-local Release = "Build 1.752"
+local Release = "Build 1.753"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -159,8 +174,9 @@ local function getSetting(category: string, name: string): any
 	end
 end
 
--- If requests/analytics have been disabled by developer, set the user-facing setting to false as well
-if requestsDisabled then
+-- If requests/analytics have been disabled by the developer or the player, set the user-facing
+-- setting to false as well
+if requestsDisabled or analyticsOptOut then
 	overrideSetting("System", "usageAnalytics", false)
 end
 
@@ -172,16 +188,7 @@ local useStudio = RunService:IsStudio() or false
 
 local settingsCreated = false
 local settingsInitialized = false -- Whether the UI elements in the settings page have been set to the proper values
-local prompt = useStudio and require(script.Parent.prompt) or loadWithTimeout(SIRIUS_RAW .. 'prompt.lua')
 local requestFunc = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
-
--- Validate prompt loaded correctly
-if not prompt and not useStudio then
-	warn("Failed to load prompt library, using fallback")
-	prompt = {
-		create = function() end -- No-op fallback
-	}
-end
 
 
 -- The function below provides a safe alternative for calling error-prone functions
@@ -203,6 +210,31 @@ local function ensureFolder(folderPath)
 	if isfolder and not callSafely(isfolder, folderPath) then
 		callSafely(makefolder, folderPath)
 	end
+end
+
+-- Folder and file names a hub supplies go into paths under the executor's workspace, so they can't
+-- be allowed to climb out of it. Removing a character can expose a new "..", so ".:./" is cleaned
+-- of the character first and the dots after, repeating until nothing changes.
+local function stripTraversal(text: string): string
+	local previous
+	repeat
+		previous = text
+		text = string.gsub(text, "%.%.", "")
+	until text == previous
+	return text
+end
+
+-- Keeps "/" so a hub can still nest its folder, but never a leading one, a drive letter or "..".
+local function sanitizeFolderName(value: any): string
+	local text = string.gsub(string.gsub(tostring(value), "\\", "/"), "[:%c]", "")
+	text = string.gsub(stripTraversal(text), "/+", "/")
+	return (string.gsub(text, "^/+", ""))
+end
+
+-- A single file name: no slashes of either kind, control characters or "..".
+local function sanitizeFileName(value: any): string
+	local text = string.gsub(tostring(value), "[/\\%c]", "")
+	return stripTraversal(text)
 end
 
 local function loadSettings()
@@ -316,10 +348,18 @@ end
 
 -- Whether analytics may be sent right now. A saved opt-out is only known once the settings file has
 -- been applied, so until then the answer is no; an executor that can't read files has nothing saved
--- to respect, so the default applies there.
+-- to respect, so the default applies there, and getgenv().RAYFIELD_ANALYTICS = false is the
+-- player's way to opt out.
 local function analyticsAllowed(): boolean
-	if requestsDisabled or useStudio then return false end
+	if requestsDisabled or analyticsOptOut or useStudio then return false end
 	if not getSetting("System", "usageAnalytics") then return false end
+	return settingsInitialized or not (isfile and readfile)
+end
+
+-- Whether analyticsAllowed() has a final answer yet, rather than waiting on the settings file.
+local function analyticsDecided(): boolean
+	if requestsDisabled or analyticsOptOut or useStudio then return true end
+	if not getSetting("System", "usageAnalytics") then return true end
 	return settingsInitialized or not (isfile and readfile)
 end
 
@@ -397,26 +437,46 @@ local function resolveHeartbeat(target: any): (string?, string?)
 	return HEARTBEAT_BASE .. string.lower(token), nil
 end
 
--- One ping. The HTTP status when it can be seen, otherwise nil. The request function hands the
--- status back; HttpGet throws on a failed request instead, so a 404 is read out of its error.
--- Yields, so call it from its own thread.
+-- One ping. The HTTP status when it can be seen, otherwise nil. HttpGet goes first: the executor's
+-- request function adds headers that identify the executor and the player's machine, and those
+-- have no business reaching a third party. HttpGet throws on a failed request, so a 404 is read
+-- out of its error. The request function is only used when HttpGet is missing or fails for
+-- another reason. Yields, so call it from its own thread.
 local function sendHeartbeat(url: string): number?
-	if requestFunc then
-		local ok, response = pcall(requestFunc, { Url = url, Method = "GET" })
-		-- some executors hand the status back as a string
-		return if ok and type(response) == "table" then tonumber(response.StatusCode) else nil
-	end
 	local ok, err = pcall(function()
 		return (game :: any):HttpGet(url)
 	end)
-	if not ok and string.find(tostring(err), "404", 1, true) then
+	if ok then
+		return 200
+	end
+	if string.find(tostring(err), "404", 1, true) then
 		return 404
+	end
+	if requestFunc then
+		local sent, response = pcall(requestFunc, { Url = url, Method = "GET" })
+		-- some executors hand the status back as a string
+		return if sent and type(response) == "table" then tonumber(response.StatusCode) else nil
 	end
 	return nil
 end
 
--- Ping `target` now and every HEARTBEAT_PERIOD after, for as long as `alive` says so. false when
--- the link is bad (which warns), or when running in Studio, where playtests aren't real runs.
+-- Heartbeats count as analytics. Waits until analyticsAllowed() says yes, for up to
+-- HEARTBEAT_PERIOD, while `wanted` holds. false once the answer is no, or it never came.
+local function awaitAnalyticsConsent(wanted: () -> boolean): boolean
+	local waited = 0
+	while not analyticsAllowed() do
+		if analyticsDecided() or waited >= HEARTBEAT_PERIOD or not wanted() then
+			return false
+		end
+		task.wait(1)
+		waited += 1
+	end
+	return true
+end
+
+-- Ping `target` every HEARTBEAT_PERIOD for as long as `alive` says so and the player's analytics
+-- choice allows it. false when the link is bad (which warns), or when running in Studio, where
+-- playtests aren't real runs.
 local function startHeartbeat(target: any, alive: () -> boolean): boolean
 	local url, reason = resolveHeartbeat(target)
 	if not url then
@@ -433,8 +493,19 @@ local function startHeartbeat(target: any, alive: () -> boolean): boolean
 	-- deferred rather than spawned: spawning runs the first ping right away, and a request that
 	-- blocks without yielding would hold CreateWindow up for a whole round trip
 	task.defer(function()
+		local function owned()
+			return heartbeatOwners[resolved] == owner and alive()
+		end
+		-- nothing is sent until the player's analytics choice is known, and an opt-out, then or
+		-- mid-session, ends the loop
+		if not awaitAnalyticsConsent(owned) then
+			if heartbeatOwners[resolved] == owner then
+				heartbeatOwners[resolved] = nil
+			end
+			return
+		end
 		local notFound = 0
-		while heartbeatOwners[resolved] == owner and alive() do
+		while owned() and analyticsAllowed() do
 			-- a 404 is Sentivel saying the token names no heartbeat (deleted, regenerated, or
 			-- mistyped into another valid-looking one). once it keeps saying so, stop asking
 			notFound = if sendHeartbeat(resolved) == 404 then notFound + 1 else 0
@@ -449,22 +520,6 @@ local function startHeartbeat(target: any, alive: () -> boolean): boolean
 		end
 	end)
 	return true
-end
-
-local promptUser = 2
-
-if promptUser == 1 and prompt and type(prompt.create) == "function" then
-	prompt.create(
-		'Be cautious when running scripts',
-	    [[Please be careful when running scripts from unknown developers. This script has already been ran.
-
-<font transparency='0.3'>Some scripts may steal your items or in-game goods.</font>]],
-		'Okay',
-		'',
-		function()
-
-		end
-	)
 end
 
 if debugX then
@@ -869,16 +924,23 @@ local rayfieldDestroyed = false -- True when RayfieldLibrary:Destroy() is called
 -- Rayfield's own heartbeat. About 1 in 200 sessions take part, and each one that does pings every
 -- HEARTBEAT_PERIOD for as long as Rayfield stays loaded. One ping per sampled load left gaps of
 -- several minutes at quiet hours, which the monitor read as an outage; a sampled session that
--- keeps pinging covers those gaps without sampling more people. Never when the developer has
--- turned Rayfield's own requests off.
-if not requestsDisabled and not useStudio and math.random(200) == 1 then
+-- keeps pinging covers those gaps without sampling more people. Like the reporter it waits for the
+-- player's analytics choice, and sends nothing when they or the developer have turned it off.
+if not requestsDisabled and not analyticsOptOut and not useStudio and math.random(200) == 1 then
 	task.defer(function()
 		local url = HEARTBEAT_BASE .. "81074364b461f8da81bad6fdc363c3b927f884d6fc28d806a15ee50ca1e68c78"
-		-- ping before checking anything: the interface may not be parented yet on this first pass
+		if not awaitAnalyticsConsent(function() return not rayfieldDestroyed end) then
+			return
+		end
+		-- the first ping skips the interface check: a script that hasn't opened a window on an
+		-- executor without files gets here before the interface is parented
 		sendHeartbeat(url)
 		while true do
 			task.wait(HEARTBEAT_PERIOD)
 			if rayfieldDestroyed or not Rayfield or Rayfield.Parent == nil or Rayfield.Name == "Rayfield-Old" then
+				break
+			end
+			if not analyticsAllowed() then
 				break
 			end
 			sendHeartbeat(url)
@@ -920,20 +982,46 @@ elseif not useStudio then
 	Rayfield.Parent = CoreGui
 end
 
+-- Running a script again loads a second copy of Rayfield. The copy it replaces is torn down through
+-- this event, which calls its Destroy: that removes its interface and disconnects its input
+-- listeners, which would otherwise keep answering hotkeys for a window nobody can see. Builds
+-- before 1.753 have no event, so those are only hidden and renamed, as before.
+local TEARDOWN_EVENT = "RayfieldTeardown"
+
+local function retireInterface(Interface: any)
+	Interface.Enabled = false
+	Interface.Name = "Rayfield-Old"
+	local teardown = Interface:FindFirstChild(TEARDOWN_EVENT)
+	if teardown and teardown:IsA("BindableEvent") then
+		pcall(function()
+			teardown:Fire()
+		end)
+	end
+end
+
 if gethui then
 	for _, Interface in ipairs(gethui():GetChildren()) do
 		if Interface.Name == Rayfield.Name and Interface ~= Rayfield then
-			Interface.Enabled = false
-			Interface.Name = "Rayfield-Old"
+			retireInterface(Interface)
 		end
 	end
 elseif not useStudio then
 	for _, Interface in ipairs(CoreGui:GetChildren()) do
 		if Interface.Name == Rayfield.Name and Interface ~= Rayfield then
-			Interface.Enabled = false
-			Interface.Name = "Rayfield-Old"
+			retireInterface(Interface)
 		end
 	end
+end
+
+do
+	local teardown = Instance.new("BindableEvent")
+	teardown.Name = TEARDOWN_EVENT
+	teardown.Event:Connect(function()
+		if not rayfieldDestroyed and type(RayfieldLibrary.Destroy) == "function" then
+			RayfieldLibrary:Destroy()
+		end
+	end)
+	teardown.Parent = Rayfield
 end
 
 if secureMode and not customAssetId then
@@ -1090,6 +1178,7 @@ local Icons = useStudio and require(script.Parent.icons) or loadWithTimeout(RAYF
 -- Variables
 
 local CFileName = nil
+local CLegacyFileName = nil -- the place-only file name configs had before Build 1.753, read as a fallback
 local CEnabled = false
 local Minimised = false
 local Hidden = false
@@ -1380,6 +1469,8 @@ local function SaveConfiguration()
 end
 
 function RayfieldLibrary:Notify(data) -- action e.g open messages
+	-- a destroyed interface has no template left to clone
+	if rayfieldDestroyed then return end
 	task.spawn(function()
 
 		-- Notification Object Creation
@@ -1983,16 +2074,38 @@ function RayfieldLibrary:CreateWindow(Settings)
 	end
 
 	pcall(function()
+		-- Without a FileName the config used to be named after the place alone, so every hub in the
+		-- same game wrote over the others'. It's now the hub's name and the place. That older file is
+		-- still read when the new one doesn't exist yet, so nobody's saved settings go missing.
+		CLegacyFileName = nil
 		if not Settings.ConfigurationSaving.FileName then
-			Settings.ConfigurationSaving.FileName = tostring(game.PlaceId)
+			local placeName = tostring(game.PlaceId)
+			-- window names often carry characters Windows refuses in a file name, like "|" or ":",
+			-- and a trailing dot or space that it drops
+			local hubName = string.gsub(sanitizeFileName(Settings.Name or ""), '[:<>"|?*]', "")
+			hubName = string.match(hubName, "^%s*(.-)[%s%.]*$") or ""
+			if hubName ~= "" then
+				Settings.ConfigurationSaving.FileName = hubName .. "-" .. placeName
+				CLegacyFileName = placeName
+			else
+				Settings.ConfigurationSaving.FileName = placeName
+			end
 		end
 
 		if Settings.ConfigurationSaving.Enabled == nil then
 			Settings.ConfigurationSaving.Enabled = false
 		end
 
-		CFileName = Settings.ConfigurationSaving.FileName
-		ConfigurationFolder = Settings.ConfigurationSaving.FolderName or ConfigurationFolder
+		CFileName = sanitizeFileName(Settings.ConfigurationSaving.FileName)
+		if CFileName == "" then
+			CFileName = tostring(game.PlaceId)
+		end
+		if Settings.ConfigurationSaving.FolderName then
+			local folderName = sanitizeFolderName(Settings.ConfigurationSaving.FolderName)
+			if folderName ~= "" then
+				ConfigurationFolder = folderName
+			end
+		end
 		CEnabled = Settings.ConfigurationSaving.Enabled
 
 		if Settings.ConfigurationSaving.Enabled then
@@ -2015,8 +2128,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 	if Settings.Discord and Settings.Discord.Enabled and not useStudio and not secureMode then
 		ensureFolder(RayfieldFolder.."/Discord Invites")
+		local inviteFile = RayfieldFolder.."/Discord Invites".."/"..sanitizeFileName(Settings.Discord.Invite)..ConfigurationExtension
 
-		if not callSafely(isfile, RayfieldFolder.."/Discord Invites".."/"..Settings.Discord.Invite..ConfigurationExtension) then
+		if not callSafely(isfile, inviteFile) then
 			if requestFunc then
 				pcall(function()
 					requestFunc({
@@ -2036,7 +2150,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end
 
 			if Settings.Discord.RememberJoins then -- We do logic this way so if the developer changes this setting, the user still won't be prompted, only new users
-				callSafely(writefile, RayfieldFolder.."/Discord Invites".."/"..Settings.Discord.Invite..ConfigurationExtension,"Rayfield RememberJoins is true for this invite, this invite will not ask you to join again")
+				callSafely(writefile, inviteFile,"Rayfield RememberJoins is true for this invite, this invite will not ask you to join again")
 			end
 		end
 	end
@@ -2067,11 +2181,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 		if not Settings.KeySettings.FileName then
 			Settings.KeySettings.FileName = "No file name specified"
 		end
+		local keyFileName = sanitizeFileName(Settings.KeySettings.FileName)
+		if keyFileName == "" then
+			keyFileName = "No file name specified"
+		end
+		local keyFile = RayfieldFolder.."/Key System".."/"..keyFileName..ConfigurationExtension
 
-		if callSafely(isfile, RayfieldFolder.."/Key System".."/"..Settings.KeySettings.FileName..ConfigurationExtension) then
+		if callSafely(isfile, keyFile) then
 			for _, MKey in ipairs(Settings.KeySettings.Key) do
-				local savedKeys = callSafely(readfile, RayfieldFolder.."/Key System".."/"..Settings.KeySettings.FileName..ConfigurationExtension)
-				if savedKeys and string.find(savedKeys, MKey) then
+				local savedKeys = callSafely(readfile, keyFile)
+				if savedKeys and string.find(savedKeys, tostring(MKey), 1, true) then
 					Passthrough = true
 				end
 			end
@@ -2176,7 +2295,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					Passthrough = true
 					KeyMain.Visible = false
 					if Settings.KeySettings.SaveKey then
-						callSafely(writefile, RayfieldFolder.."/Key System".."/"..Settings.KeySettings.FileName..ConfigurationExtension, FoundKey)
+						callSafely(writefile, keyFile, FoundKey)
 						RayfieldLibrary:Notify({Title = "Key System", Content = "The key for this script has been saved successfully.", Image = 3605522284})
 					end
 				else
@@ -3326,6 +3445,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end)
 
 			local connection = UserInputService.InputBegan:Connect(function(input, processed)
+				if rayfieldDestroyed then return end
 				if CheckingForKey then
 					if input.KeyCode ~= Enum.KeyCode.Unknown then
 						local SplitMessage = string.split(tostring(input.KeyCode), ".")
@@ -3902,6 +4022,10 @@ end
 local hideHotkeyConnection -- Has to be initialized here since the connection is made later in the script
 function RayfieldLibrary:Destroy()
 	rayfieldDestroyed = true
+	-- stops the kick watcher the reporter armed, so nothing is sent for a window that's gone
+	if reporter and reporter.disable then
+		pcall(reporter.disable, reporter)
+	end
 	if hideHotkeyConnection then
 		hideHotkeyConnection:Disconnect()
 	end
@@ -4003,6 +4127,7 @@ Topbar.Hide.MouseButton1Click:Connect(function()
 end)
 
 hideHotkeyConnection = UserInputService.InputBegan:Connect(function(input, processed)
+	if rayfieldDestroyed then return end
 	if (input.KeyCode == Enum.KeyCode[getSetting("General", "rayfieldOpen")]) and not processed then
 		if Debounce then return end
 		if Hidden then
@@ -4060,8 +4185,15 @@ function RayfieldLibrary:LoadConfiguration()
 			end
 
 			if isfile then 
-				if callSafely(isfile, ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension) then
-					loaded = LoadConfiguration(callSafely(readfile, ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension))
+				local configPath = ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension
+				if CLegacyFileName and not callSafely(isfile, configPath) then
+					local legacyPath = ConfigurationFolder .. "/" .. CLegacyFileName .. ConfigurationExtension
+					if callSafely(isfile, legacyPath) then
+						configPath = legacyPath
+					end
+				end
+				if callSafely(isfile, configPath) then
+					loaded = LoadConfiguration(callSafely(readfile, configPath))
 				end
 			else
 				notified = true

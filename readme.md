@@ -15,9 +15,19 @@ When a Rayfield window opens, Rayfield sends one event to Sirius's analytics ser
 
 Cloudflare tells us the country the request came from. Your IP address is not stored, and nothing you type, say or click is ever sent.
 
+Some sessions also ping an uptime monitor on Sentivel (sentivel.com) every 5 minutes while Rayfield is loaded: about 1 in 200 for Rayfield's own monitor, and every session of a script whose developer set `Heartbeat` in `CreateWindow`. A ping is an empty request to the monitor's URL. Pings follow the same choice as analytics, so turning analytics off stops them.
+
 ### Turning it off
 
-Open the Rayfield Settings tab in any Rayfield window and switch off **Usage Analytics (pseudonymous)**. The choice is saved in `Rayfield/settings.rfld` and applies to every Rayfield script. While it is off, Rayfield doesn't download its analytics module at all, and nothing is sent. Turning it off mid-session also stops anything already queued, such as kick reporting.
+If your executor can save files, open the Rayfield Settings tab in any Rayfield window and switch off **Usage Analytics (pseudonymous)**. The choice is saved in `Rayfield/settings.rfld` and applies to every Rayfield script. Turning it off mid-session also stops anything already queued, such as kick reporting.
+
+If your executor can't save files, Rayfield has no Settings tab. Run this before the script instead, or put it in your executor's autoexec folder:
+
+```lua
+getgenv().RAYFIELD_ANALYTICS = false
+```
+
+This works on any executor and overrides the setting for as long as it's set. Either way, while analytics is off Rayfield doesn't download its analytics module at all, and nothing is sent.
 
 ### For script developers
 
@@ -27,8 +37,8 @@ Set this before loading Rayfield to turn analytics off for everyone who runs you
 getgenv().DISABLE_RAYFIELD_REQUESTS = true
 ```
 
-It forces the setting off, stops the analytics module being fetched, and skips Rayfield's occasional uptime ping. Rayfield still downloads its icon set and prompt module from GitHub.
+It forces the setting off, stops the analytics module being fetched, and skips the uptime pings, including the one `Heartbeat` sets up. Rayfield still downloads its icon set from GitHub.
 
-Remote modules are loaded from a pinned commit (`RAYFIELD_COMMIT` and `SIRIUS_COMMIT` at the top of `source.lua`), not from a branch.
+Remote modules are loaded from a pinned commit (`RAYFIELD_COMMIT` at the top of `source.lua`), not from a branch.
 
 Privacy policy: https://sirius.menu/privacy
