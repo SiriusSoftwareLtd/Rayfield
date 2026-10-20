@@ -122,7 +122,7 @@ local function secureNotify(wType, title, content)
 	end)
 end
 local InterfaceBuild = 'UU2NX'
-local Release = "Build 1.751"
+local Release = "Build 1.752"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -449,13 +449,6 @@ local function startHeartbeat(target: any, alive: () -> boolean): boolean
 		end
 	end)
 	return true
-end
-
--- only ping ~1 in 200 runs: at Rayfield's volume that is still a couple of pings a minute, far more
--- than a 5-minute heartbeat needs, and each ping is a billed request. Never when the developer has
--- turned Rayfield's own requests off
-if not requestsDisabled and not useStudio and math.random(200) == 1 then
-	task.defer(sendHeartbeat, HEARTBEAT_BASE .. "81074364b461f8da81bad6fdc363c3b927f884d6fc28d806a15ee50ca1e68c78")
 end
 
 local promptUser = 2
@@ -872,6 +865,26 @@ local correctBuild = false
 local warned
 local globalLoaded
 local rayfieldDestroyed = false -- True when RayfieldLibrary:Destroy() is called
+
+-- Rayfield's own heartbeat. About 1 in 200 sessions take part, and each one that does pings every
+-- HEARTBEAT_PERIOD for as long as Rayfield stays loaded. One ping per sampled load left gaps of
+-- several minutes at quiet hours, which the monitor read as an outage; a sampled session that
+-- keeps pinging covers those gaps without sampling more people. Never when the developer has
+-- turned Rayfield's own requests off.
+if not requestsDisabled and not useStudio and math.random(200) == 1 then
+	task.defer(function()
+		local url = HEARTBEAT_BASE .. "81074364b461f8da81bad6fdc363c3b927f884d6fc28d806a15ee50ca1e68c78"
+		-- ping before checking anything: the interface may not be parented yet on this first pass
+		sendHeartbeat(url)
+		while true do
+			task.wait(HEARTBEAT_PERIOD)
+			if rayfieldDestroyed or not Rayfield or Rayfield.Parent == nil or Rayfield.Name == "Rayfield-Old" then
+				break
+			end
+			sendHeartbeat(url)
+		end
+	end)
+end
 
 repeat
 	if Rayfield:FindFirstChild('Build') and Rayfield.Build.Value == InterfaceBuild then
