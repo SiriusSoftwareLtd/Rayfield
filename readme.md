@@ -23,7 +23,7 @@ If your executor can save files, open the Rayfield Settings tab in any Rayfield 
 
 If your executor can't save files, Rayfield has no Settings tab. Run this before the script instead, or put it in your executor's autoexec folder:
 
-```lua
+```luau
 getgenv().RAYFIELD_ANALYTICS = false
 ```
 
@@ -33,7 +33,7 @@ This works on any executor and overrides the setting for as long as it's set. Ei
 
 Set this before loading Rayfield to turn analytics off for everyone who runs your script:
 
-```lua
+```luauu
 getgenv().DISABLE_RAYFIELD_REQUESTS = true
 ```
 
