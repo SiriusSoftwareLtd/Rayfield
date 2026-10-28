@@ -448,11 +448,12 @@ end
 
 local siaCurrentTab = nil -- the tab on show, whose elements count as seen as they're made
 
--- An element's handle, for siaUsed, siaSetState and siaError. nil for the settings page (tab nil),
+-- An element's handle, for siaUsed, siaSetState and siaError. The settings page is tab 0,
 -- which is Rayfield's, not the script's. Labels stay on this side: the client sends a category
 -- worked out from them.
 local function siaElement(kind: string, name: any, tab: number?): any
-	if not tab then return nil end
+	-- The Rayfield Settings page (no tab number) is tab 0: SIA keeps it apart from the script's tabs.
+	tab = tab or 0
 	local handle = { kind = kind, name = tostring(name), tab = tab }
 	table.insert(siaElements, handle)
 	siaRun(function(client)
@@ -2979,6 +2980,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 		-- Section
 		function Tab:CreateSection(SectionName)
+			siaCall("section", siaTab or 0, SectionName)
 
 			local SectionValue = {}
 

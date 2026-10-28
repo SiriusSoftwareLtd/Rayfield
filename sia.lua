@@ -13,7 +13,9 @@
 	A library (Rayfield Gen1, Gen2) drives it through:
 		local sia = SIA.new({ token, lib, libVersion, script = { id, token, name } })
 		local id = sia:element(kind, label, tab)   -- an element exists
-		sia:tabName(tab, name)                     -- a tab's name
+		sia:tabName(tab, name)                     -- a tab's name (tab 0 is Rayfield's settings page)
+		sia:section(tab, name)                     -- a section heading on a tab
+		sia:describe(id, text)                     -- an element's description line
 		sia:used(id, action, value)                -- it was used (value 0..1 where it has one)
 		sia:state(id, value)                       -- its current value (toggles: 1 on, 0 off)
 		sia:tab(tab)                               -- a tab was shown: its elements were seen
@@ -176,13 +178,13 @@ end
 
 -- An element or tab name as sent: the script's own words, with rich text tags, player names
 -- and numbers taken out, so a label like "Welcome, Name" or "Coins: 1200" carries nothing personal.
-local function cleanLabel(label)
+local function cleanLabel(label, max)
 	local text = string.gsub(tostring(label or ""), "<[^>]*>", "")
 	text = withoutNames(text)
 	text = string.gsub(text, "%d+", "#")
 	text = string.gsub(text, "%s+", " ")
 	text = string.match(text, "^%s*(.-)%s*$") or ""
-	return string.sub(text, 1, 60)
+	return string.sub(text, 1, max or 60)
 end
 
 local function kickTemplate(message)
@@ -223,6 +225,8 @@ function SIA.new(opts)
 	self._lib = { tostring(opts.lib or "other"), tostring(opts.libVersion or "") }
 	self._theme = if opts.theme ~= nil then string.sub(tostring(opts.theme), 1, 32) else nil
 	self._tabs = {} -- tab index -> { name, sent }
+	self._sections = {} -- tab index -> the current section heading
+	self._subtitle = if opts.subtitle ~= nil then opts.subtitle else nil
 	self._script = opts.script or {}
 	self._run = randomHex(16)
 	self._seq = 0
@@ -355,6 +359,24 @@ function SIA:_sampleFrames()
 	end)
 end
 
+-- A section heading: elements made on that tab after it sit under it.
+function SIA:section(tab, name)
+	pcall(function()
+		self._sections[tonumber(tab) or 0] = name
+	end)
+end
+
+-- Text the library shows with an element: a description line under it (Gen2).
+function SIA:describe(id, text)
+	pcall(function()
+		local e = self._elements[id]
+		if e and text and text ~= "" and e.description ~= text then
+			e.description = text
+			e.labelSent = false
+		end
+	end)
+end
+
 function SIA:element(kind, label, tab)
 	local ok, id = pcall(function()
 		local key = tostring(kind) .. "|" .. tostring(label) .. "|" .. tostring(tab or 0)
@@ -362,6 +384,7 @@ function SIA:element(kind, label, tab)
 		if not self._elements[id] then
 			self._elements[id] = {
 				type = tostring(kind), tab = tonumber(tab) or 0, category = categoryOf(label), label = label, labelSent = false,
+				section = self._sections[tonumber(tab) or 0],
 				uses = 0, onSince = nil, onSeconds = 0, value = 0, seen = false, rage = 0, presses = {},
 			}
 			table.insert(self._order, id)
@@ -564,11 +587,14 @@ function SIA:_flush(final)
 			end
 		end
 		-- Labels and tab names go once each, in the first batch that has them.
-		local labels, tabNames = {}, {}
+		local labels, tabNames, extras = {}, {}, {}
 		for id, e in self._elements do
 			if not e.labelSent and #labels < 300 then
 				e.labelSent = true
 				table.insert(labels, { id, cleanLabel(e.label) })
+				if e.section or e.description then
+					table.insert(extras, { id, if e.section then cleanLabel(e.section) else "", if e.description then cleanLabel(e.description, 140) else "" })
+				end
 			end
 		end
 		for i, t in self._tabs do
@@ -607,6 +633,8 @@ function SIA:_flush(final)
 			h = { self._errors, self._fps or 0 }, ev = if #events > 0 then events else nil,
 			lb = if #labels > 0 then labels else nil, tn = if #tabNames > 0 then tabNames else nil,
 			th = if self._seq == 0 then self._theme else nil,
+			sb = if self._seq == 0 and self._subtitle then cleanLabel(self._subtitle) else nil,
+			ex = if #extras > 0 then extras else nil,
 		}
 		self._seq += 1
 		self._ordered = {}
