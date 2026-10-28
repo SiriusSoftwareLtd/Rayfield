@@ -2129,7 +2129,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	end
 
 	ensureFolder(RayfieldFolder)
-	siaStart({ name = Settings.Name, id = Settings.ScriptID, token = Settings.VerificationToken })
+	pcall(siaStart, { name = Settings.Name, id = Settings.ScriptID, token = Settings.VerificationToken })
 
 	local Passthrough = false
 	Topbar.Title.Text = Settings.Name
