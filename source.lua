@@ -405,7 +405,7 @@ local function siaId(client: any, handle: any): string?
 	return handle.id
 end
 
-local function siaStart(info: { name: string?, id: any?, token: any? })
+local function siaStart(info: { name: string?, id: any?, token: any?, theme: string? })
 	siaScript = info
 	if siaState ~= "off" or not siaAllowed() then return end
 	siaState = "loading"
@@ -417,7 +417,7 @@ local function siaStart(info: { name: string?, id: any?, token: any? })
 		if fetched and type(source) == "string" and #source > 0 then
 			pcall(function()
 				local SIA = (loadstring(source) :: any)()
-				client = SIA.new({ token = SIA_TOKEN, lib = "gen1", libVersion = Release, script = info })
+				client = SIA.new({ token = SIA_TOKEN, lib = "gen1", libVersion = Release, script = info, theme = info.theme })
 			end)
 		end
 		-- the player may have turned it off while it loaded
@@ -2129,7 +2129,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 	end
 
 	ensureFolder(RayfieldFolder)
-	pcall(siaStart, { name = Settings.Name, id = Settings.ScriptID, token = Settings.VerificationToken })
+	pcall(siaStart, {
+		name = Settings.Name, id = Settings.ScriptID, token = Settings.VerificationToken,
+		theme = if type(Settings.Theme) == "string" then Settings.Theme elseif Settings.Theme then "Custom" else "Default",
+	})
 
 	local Passthrough = false
 	Topbar.Title.Text = Settings.Name
@@ -2514,6 +2517,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		if not Ext then
 			siaTabCount += 1
 			siaTab = siaTabCount
+			siaCall("tabName", siaTab, Name)
 		end
 		local SDone = false
 		local TabButton = TabList.Template:Clone()
