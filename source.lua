@@ -153,8 +153,8 @@ local settingsTable = {
 		usageAnalytics = {
 			Type = 'toggle',
 			Value = true,
-			Name = 'Usage Analytics (pseudonymous)',
-			Description = 'Sends a hashed user ID, executor, game, locale and script details when a window opens, plus kick error codes. Nothing you type. sirius.menu/privacy',
+			Name = 'Usage analytics',
+			Description = 'Sends anonymous counts of which parts of this window are used. Never your name, what you type or your messages. sirius.menu/privacy',
 		},
 	}
 }
@@ -250,7 +250,7 @@ local function loadSettings()
 		-- for debug in studio
 		if useStudio then
 			file = [[
-	{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Usage Analytics (pseudonymous)","Element":{"Ext":true,"Name":"Usage Analytics (pseudonymous)","Set":null,"CurrentValue":false,"Callback":null}}}}
+	{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Usage analytics","Element":{"Ext":true,"Name":"Usage analytics","Set":null,"CurrentValue":false,"Callback":null}}}}
 ]]
 		end
 
@@ -361,6 +361,128 @@ local function analyticsDecided(): boolean
 	if requestsDisabled or analyticsOptOut or useStudio then return true end
 	if not getSetting("System", "usageAnalytics") then return true end
 	return settingsInitialized or not (isfile and readfile)
+end
+
+-- SIA (sia.lua) counts which parts of a window players use. Like the reporter it is
+-- fetched at the pinned commit, and only once analytics are allowed. It starts as a window is
+-- created, before the key system and the settings page, so until the settings page has applied
+-- the saved file, the file itself is read for an opt-out.
+local SIA_TOKEN = "sia_rayfield_bd0f30653a58a75bac2987e3"
+
+local sia = nil
+local siaState = "off" -- "loading" while sia.lua is fetched, then "on"
+local siaQueue = {} -- calls made while it loads, run in order once it has
+local siaElements = {} -- every element made, registered whenever the client starts
+local siaScript = nil -- the window's script details, kept for a restart from settings
+local siaLoads = 0 -- counts starts, so a load the player cancelled and restarted gives way
+
+local function savedAnalyticsChoice(): boolean?
+	local ok, value = pcall(function()
+		local path = RayfieldFolder .. "/settings" .. ConfigurationExtension
+		if not (isfile and readfile and isfile(path)) then return nil end
+		return HttpService:JSONDecode(readfile(path)).System.usageAnalytics.Value
+	end)
+	return if ok and type(value) == "boolean" then value else nil
+end
+
+local function siaAllowed(): boolean
+	if requestsDisabled or analyticsOptOut or useStudio then return false end
+	if not getSetting("System", "usageAnalytics") then return false end
+	return settingsInitialized or savedAnalyticsChoice() ~= false
+end
+
+-- Runs fn(client) now, after the client loads, or not at all when SIA is off.
+local function siaRun(fn: (any) -> ())
+	if siaState == "on" and sia then
+		pcall(fn, sia)
+	elseif siaState == "loading" and #siaQueue < 500 then
+		table.insert(siaQueue, fn)
+	end
+end
+
+local function siaId(client: any, handle: any): string?
+	handle.id = handle.id or client:element(handle.kind, handle.name, handle.tab)
+	return handle.id
+end
+
+local function siaStart(info: { name: string?, id: any?, token: any? })
+	siaScript = info
+	if siaState ~= "off" or not siaAllowed() then return end
+	siaState = "loading"
+	siaLoads += 1
+	local load = siaLoads
+	task.spawn(function()
+		local client = nil
+		local fetched, source = pcall((game :: any).HttpGet, game, RAYFIELD_RAW .. "sia.lua")
+		if fetched and type(source) == "string" and #source > 0 then
+			pcall(function()
+				local SIA = (loadstring(source) :: any)()
+				client = SIA.new({ token = SIA_TOKEN, lib = "gen1", libVersion = Release, script = info })
+			end)
+		end
+		-- the player may have turned it off while it loaded
+		if load ~= siaLoads then return end
+		if not client or siaState ~= "loading" then
+			siaState, siaQueue = "off", {}
+			return
+		end
+		sia, siaState = client, "on"
+		for _, handle in siaElements do
+			pcall(function()
+				local id = siaId(client, handle)
+				if handle.value then client:state(id, handle.value) end
+			end)
+		end
+		local queued = siaQueue
+		siaQueue = {}
+		for _, fn in queued do
+			pcall(fn, client)
+		end
+	end)
+end
+
+local function siaStop()
+	if sia then pcall(sia.disable, sia) end
+	sia, siaState, siaQueue = nil, "off", {}
+end
+
+local siaCurrentTab = nil -- the tab on show, whose elements count as seen as they're made
+
+-- An element's handle, for siaUsed, siaSetState and siaError. nil for the settings page (tab nil),
+-- which is Rayfield's, not the script's. Labels stay on this side: the client sends a category
+-- worked out from them.
+local function siaElement(kind: string, name: any, tab: number?): any
+	if not tab then return nil end
+	local handle = { kind = kind, name = tostring(name), tab = tab }
+	table.insert(siaElements, handle)
+	siaRun(function(client)
+		siaId(client, handle)
+		if tab == siaCurrentTab then client:tab(tab) end
+	end)
+	return handle
+end
+
+-- A player used the element. value is 0..1 where the element has one.
+local function siaUsed(handle: any, action: string, value: number?)
+	if not handle then return end
+	siaRun(function(client) client:used(siaId(client, handle), action, value) end)
+end
+
+-- The element's value, from the player or the script: toggles 1 or 0, sliders 0..1.
+local function siaSetState(handle: any, value: number)
+	if not handle then return end
+	handle.value = value -- for a client that starts later
+	siaRun(function(client) client:state(siaId(client, handle), value) end)
+end
+
+local function siaError(handle: any)
+	if not handle then return end
+	siaRun(function(client) client:error(siaId(client, handle)) end)
+end
+
+local function siaCall(method: string, ...: any)
+	local args = table.pack(...)
+	siaRun(function(client) client[method](client, table.unpack(args, 1, args.n)) end)
 end
 
 -- Sentivel heartbeats. A heartbeat monitor is a dead-man's switch: it stays green while pings keep
@@ -1684,6 +1806,7 @@ local function setTabButtonsVisible(show)
 end
 
 local function Hide(notify: boolean?)
+	siaCall("window", "minimise")
 	if MPrompt then
 		MPrompt.Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 		MPrompt.Position = UDim2.new(0.5, 0, 0, -50)
@@ -1740,6 +1863,7 @@ local function Hide(notify: boolean?)
 end
 
 local function Maximise()
+	siaCall("window", "restore")
 	Debounce = true
 	Topbar.ChangeSize.Image = customAssets[tostring(10137941941)]
 
@@ -1767,6 +1891,7 @@ end
 
 
 local function Unhide()
+	siaCall("window", "restore")
 	Debounce = true
 	Main.Position = UDim2.new(0.5, 0, 0.5, 0)
 	Main.Visible = true
@@ -1820,6 +1945,7 @@ local function Unhide()
 end
 
 local function Minimise()
+	siaCall("window", "minimise")
 	Debounce = true
 	Topbar.ChangeSize.Image = customAssets[tostring(11036884234)]
 
@@ -1875,6 +2001,13 @@ local function updateSetting(category: string, setting: string, value: any)
 	-- Turning analytics off mid-session also stops anything already armed, like the kick watcher.
 	if category == "System" and setting == "usageAnalytics" and not value and reporter and reporter.disable then
 		pcall(reporter.disable, reporter)
+	end
+	if category == "System" and setting == "usageAnalytics" then
+		if value then
+			if siaScript then siaStart(siaScript) end
+		else
+			siaStop()
+		end
 	end
 end
 
@@ -1996,6 +2129,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	end
 
 	ensureFolder(RayfieldFolder)
+	siaStart({ name = Settings.Name, id = Settings.ScriptID, token = Settings.VerificationToken })
 
 	local Passthrough = false
 	Topbar.Title.Text = Settings.Name
@@ -2203,6 +2337,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		end
 
 		if not Passthrough then
+			siaCall("keyScreen", "shown")
 			local AttemptsRemaining = Settings.KeySettings.MaxAttempts or 5
 			Rayfield.Enabled = false
 			local KeyUI = useStudio and script.Parent:FindFirstChild('Key') or game:GetObjects("rbxassetid://11380036235")[1]
@@ -2289,7 +2424,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 						FoundKey = MKey
 					end
 				end
+				siaCall("keyScreen", "attempt")
 				if KeyFound then
+					siaCall("keyScreen", "accepted")
 					fadeOutKeyUI(KeyMain)
 					task.wait(0.51)
 					Passthrough = true
@@ -2332,6 +2469,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		repeat task.wait() until Passthrough
 		if rayfieldDestroyed then return end
 	end
+	siaCall("window", "open")
 
 	-- the developer's own Sentivel heartbeat, pinged for as long as this interface is up. Started
 	-- only once the key system has let the player through, so a player sat at the key prompt isn't
@@ -2370,7 +2508,13 @@ function RayfieldLibrary:CreateWindow(Settings)
 	-- Tab
 	local FirstTab = false
 	local Window = {}
+	local siaTabCount = 0
 	function Window:CreateTab(Name, Image, Ext)
+		local siaTab = nil
+		if not Ext then
+			siaTabCount += 1
+			siaTab = siaTabCount
+		end
 		local SDone = false
 		local TabButton = TabList.Template:Clone()
 		TabButton.Name = Name
@@ -2446,6 +2590,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			TweenService:Create(TabButton.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
 		elseif not Ext then
 			FirstTab = Name
+			siaCurrentTab = siaTab
 			TabButton.BackgroundColor3 = SelectedTheme.TabBackgroundSelected
 			TabButton.Image.ImageColor3 = SelectedTheme.SelectedTabTextColor
 			TabButton.Title.TextColor3 = SelectedTheme.SelectedTabTextColor
@@ -2457,6 +2602,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 		TabButton.Interact.MouseButton1Click:Connect(function()
 			if Minimised then return end
+			if siaTab and siaCurrentTab ~= siaTab then
+				siaCurrentTab = siaTab
+				siaCall("tab", siaTab)
+			end
 			TweenService:Create(TabButton, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
 			TweenService:Create(TabButton.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 			TweenService:Create(TabButton.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
@@ -2487,6 +2636,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		-- Button
 		function Tab:CreateButton(ButtonSettings)
 			local ButtonValue = {}
+			local siaHandle = siaElement("button", ButtonSettings.Name, siaTab)
 
 			local Button = Elements.Template.Button:Clone()
 			Button.Name = ButtonSettings.Name
@@ -2504,7 +2654,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 
 			Button.Interact.MouseButton1Click:Connect(function()
+				siaUsed(siaHandle, "press")
 				local Success, Response = pcall(ButtonSettings.Callback)
+				if not Success then siaError(siaHandle) end
 				-- Prevents animation from trying to play if the button's callback called RayfieldLibrary:Destroy()
 				if rayfieldDestroyed then
 					return
@@ -2556,6 +2708,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		-- ColorPicker
 		function Tab:CreateColorPicker(ColorPickerSettings) -- by Throit
 			ColorPickerSettings.Type = "ColorPicker"
+			local siaHandle = siaElement("colorpicker", ColorPickerSettings.Name, siaTab)
 			local ColorPicker = Elements.Template.ColorPicker:Clone()
 			local Background = ColorPicker.CPBackground
 			local Display = Background.Display
@@ -2631,6 +2784,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end)
 
 			local colorPickerInputConnection = UserInputService.InputEnded:Connect(function(input, gameProcessed) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+					if mainDragging or sliderDragging then siaUsed(siaHandle, "set") end
 					mainDragging = false
 					sliderDragging = false
 				end end)
@@ -2674,6 +2828,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end
 			setDisplay()
 			ColorPicker.HexInput.InputBox.FocusLost:Connect(function()
+				siaUsed(siaHandle, "set")
 				if not pcall(function()
 						local r, g, b = string.match(ColorPicker.HexInput.InputBox.Text, "^#?(%w%w)(%w%w)(%w%w)$")
 						local rgbColor = Color3.fromRGB(tonumber(r, 16),tonumber(g, 16), tonumber(b, 16))
@@ -2715,14 +2870,17 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end
 			ColorPicker.RGB.RInput.InputBox.FocusLost:connect(function()
 				rgbBoxes(ColorPicker.RGB.RInput.InputBox,"R")
+				siaUsed(siaHandle, "set")
 				pcall(function()ColorPickerSettings.Callback(Color3.fromHSV(h,s,v))end)
 			end)
 			ColorPicker.RGB.GInput.InputBox.FocusLost:connect(function()
 				rgbBoxes(ColorPicker.RGB.GInput.InputBox,"G")
+				siaUsed(siaHandle, "set")
 				pcall(function()ColorPickerSettings.Callback(Color3.fromHSV(h,s,v))end)
 			end)
 			ColorPicker.RGB.BInput.InputBox.FocusLost:connect(function()
 				rgbBoxes(ColorPicker.RGB.BInput.InputBox,"B")
+				siaUsed(siaHandle, "set")
 				pcall(function()ColorPickerSettings.Callback(Color3.fromHSV(h,s,v))end)
 			end)
 
@@ -2969,6 +3127,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 		-- Input
 		function Tab:CreateInput(InputSettings)
+			local siaHandle = siaElement("input", InputSettings.Name, siaTab)
 			local Input = Elements.Template.Input:Clone()
 			Input.Name = InputSettings.Name
 			Input.Title.Text = InputSettings.Name
@@ -2992,12 +3151,14 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Input.InputFrame.Size = UDim2.new(0, Input.InputFrame.InputBox.TextBounds.X + 24, 0, 30)
 
 			Input.InputFrame.InputBox.FocusLost:Connect(function()
+				siaUsed(siaHandle, "set")
 				local Success, Response = pcall(function()
 					InputSettings.Callback(Input.InputFrame.InputBox.Text)
 					InputSettings.CurrentValue = Input.InputFrame.InputBox.Text
 				end)
 
 				if not Success then
+					siaError(siaHandle)
 					TweenService:Create(Input, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 					TweenService:Create(Input.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 					Input.Title.Text = "Callback Error"
@@ -3059,6 +3220,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 		-- Dropdown
 		function Tab:CreateDropdown(DropdownSettings)
+			local siaHandle = siaElement("dropdown", DropdownSettings.Name, siaTab)
 			local Dropdown = Elements.Template.Dropdown:Clone()
 			if string.find(DropdownSettings.Name,"closed") then
 				Dropdown.Name = "Dropdown"
@@ -3233,11 +3395,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 						end
 
 
+						-- the option's place in the list, 0 for the first and 1 for the last
+						local position = table.find(DropdownSettings.Options, Option) or 1
+						siaUsed(siaHandle, "pick", (position - 1) / math.max(#DropdownSettings.Options - 1, 1))
+
 						local Success, Response = pcall(function()
 							DropdownSettings.Callback(DropdownSettings.CurrentOption)
 						end)
 
 						if not Success then
+							siaError(siaHandle)
 							TweenService:Create(Dropdown, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 							TweenService:Create(Dropdown.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 							Dropdown.Title.Text = "Callback Error"
@@ -3401,6 +3568,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 		-- Keybind
 		function Tab:CreateKeybind(KeybindSettings)
+			local siaHandle = siaElement("keybind", KeybindSettings.Name, siaTab)
 			local CheckingForKey = false
 			local Keybind = Elements.Template.Keybind:Clone()
 			Keybind.Name = KeybindSettings.Name
@@ -3453,6 +3621,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 						Keybind.KeybindFrame.KeybindBox.Text = tostring(NewKeyNoEnum)
 						KeybindSettings.CurrentKeybind = tostring(NewKeyNoEnum)
 						Keybind.KeybindFrame.KeybindBox:ReleaseFocus()
+						siaUsed(siaHandle, "bind")
 						if not KeybindSettings.Ext then
 							SaveConfiguration()
 						end
@@ -3462,6 +3631,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 						end
 					end
 				elseif not KeybindSettings.CallOnChange and KeybindSettings.CurrentKeybind ~= nil and (input.KeyCode == Enum.KeyCode[KeybindSettings.CurrentKeybind] and not processed) then -- Test
+					siaUsed(siaHandle, "press")
 					local Held = true
 					local Connection
 					Connection = input.Changed:Connect(function(prop)
@@ -3474,6 +3644,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					if not KeybindSettings.HoldToInteract then
 						local Success, Response = pcall(KeybindSettings.Callback)
 						if not Success then
+							siaError(siaHandle)
 							TweenService:Create(Keybind, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 							TweenService:Create(Keybind.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 							Keybind.Title.Text = "Callback Error"
@@ -3535,6 +3706,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 		-- Toggle
 		function Tab:CreateToggle(ToggleSettings)
 			local ToggleValue = {}
+			local siaHandle = siaElement("toggle", ToggleSettings.Name, siaTab)
+			siaSetState(siaHandle, if ToggleSettings.CurrentValue == true then 1 else 0)
 
 			local Toggle = Elements.Template.Toggle:Clone()
 			Toggle.Name = ToggleSettings.Name
@@ -3598,6 +3771,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()		
 				end
 
+				siaUsed(siaHandle, if ToggleSettings.CurrentValue then "on" else "off", if ToggleSettings.CurrentValue then 1 else 0)
 				local Success, Response = pcall(function()
 					if debugX then warn('Running toggle \''..ToggleSettings.Name..'\' (Interact)') end
 
@@ -3605,6 +3779,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				end)
 
 				if not Success then
+					siaError(siaHandle)
 					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 					Toggle.Title.Text = "Callback Error"
@@ -3648,6 +3823,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()	
 				end
 
+				siaSetState(siaHandle, if ToggleSettings.CurrentValue then 1 else 0)
 				local Success, Response = pcall(function()
 					if debugX then warn('Running toggle \''..ToggleSettings.Name..'\' (:Set)') end
 
@@ -3655,6 +3831,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				end)
 
 				if not Success then
+					siaError(siaHandle)
 					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 					Toggle.Title.Text = "Callback Error"
@@ -3706,6 +3883,13 @@ function RayfieldLibrary:CreateWindow(Settings)
 		-- Slider
 		function Tab:CreateSlider(SliderSettings)
 			local SLDragging = false
+			local siaHandle = siaElement("slider", SliderSettings.Name, siaTab)
+			-- where a value sits in the slider's range, 0..1
+			local function siaPosition(value: number): number
+				local span = SliderSettings.Range[2] - SliderSettings.Range[1]
+				return if span > 0 then (value - SliderSettings.Range[1]) / span else 0
+			end
+			siaSetState(siaHandle, siaPosition(SliderSettings.CurrentValue))
 			local Slider = Elements.Template.Slider:Clone()
 			Slider.Name = SliderSettings.Name
 			Slider.Title.Text = SliderSettings.Name
@@ -3755,6 +3939,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 			Slider.Main.Interact.InputEnded:Connect(function(Input) 
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then 
+					if SLDragging then siaUsed(siaHandle, "set", siaPosition(SliderSettings.CurrentValue)) end
 					TweenService:Create(Slider.Main.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0.4}):Play()
 					TweenService:Create(Slider.Main.Progress.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0.3}):Play()
 					SLDragging = false 
@@ -3800,6 +3985,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 						end
 
 						if SliderSettings.CurrentValue ~= NewValue then
+							siaSetState(siaHandle, siaPosition(NewValue))
 							local Success, Response = pcall(function()
 								SliderSettings.Callback(NewValue)
 							end)
@@ -3807,6 +3993,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 								TweenService:Create(Slider, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 								TweenService:Create(Slider.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 								Slider.Title.Text = "Callback Error"
+								siaError(siaHandle)
 								print("Rayfield | "..SliderSettings.Name.." Callback Error " ..tostring(Response))
 								warn('Check docs.sirius.menu for help with Rayfield specific development.')
 								task.wait(0.5)
@@ -3832,6 +4019,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 				TweenService:Create(Slider.Main.Progress, TweenInfo.new(0.45, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(0, Slider.Main.AbsoluteSize.X * ((NewVal - SliderSettings.Range[1]) / (SliderSettings.Range[2] - SliderSettings.Range[1])) > 5 and Slider.Main.AbsoluteSize.X * ((NewVal - SliderSettings.Range[1]) / (SliderSettings.Range[2] - SliderSettings.Range[1])) or 5, 1, 0)}):Play()
 				Slider.Main.Information.Text = tostring(NewVal) .. " " .. (SliderSettings.Suffix or "")
+				siaSetState(siaHandle, siaPosition(NewVal))
 
 				local Success, Response = pcall(function()
 					SliderSettings.Callback(NewVal)
@@ -3841,6 +4029,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Slider, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 					TweenService:Create(Slider.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 					Slider.Title.Text = "Callback Error"
+					siaError(siaHandle)
 					print("Rayfield | "..SliderSettings.Name.." Callback Error " ..tostring(Response))
 					warn('Check docs.sirius.menu for help with Rayfield specific development.')
 					task.wait(0.5)
@@ -4022,6 +4211,7 @@ end
 local hideHotkeyConnection -- Has to be initialized here since the connection is made later in the script
 function RayfieldLibrary:Destroy()
 	rayfieldDestroyed = true
+	siaCall("window", "close")
 	-- stops the kick watcher the reporter armed, so nothing is sent for a window that's gone
 	if reporter and reporter.disable then
 		pcall(reporter.disable, reporter)
@@ -4115,6 +4305,7 @@ if Topbar:FindFirstChild('Settings') then
 				end
 			end
 
+			siaCurrentTab = nil
 			Elements.UIPageLayout:JumpTo(Elements['Rayfield Settings'])
 		end)
 	end)
