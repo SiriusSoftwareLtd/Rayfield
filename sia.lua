@@ -6,9 +6,9 @@
 
 	Counts what a script's players do, in memory, and sends it in small
 	batches: one after the first minute, then every five minutes, and one
-	when the window closes. Nothing here may slow the script or break it:
-	every call is pcall-wrapped and never yields the caller's thread, and a
-	failed send is dropped, never retried.
+	when the window closes or the player teleports. Nothing here may slow the
+	script or break it: every call is pcall-wrapped and never yields the
+	caller's thread, and a failed send is dropped, never retried.
 
 	A library (Rayfield Gen1, Gen2) drives it through:
 		local sia = SIA.new({ token, lib, libVersion, script = { id, token, name } })
@@ -40,17 +40,23 @@ local Players = service("Players")
 local UserInputService = service("UserInputService")
 local GuiService = service("GuiService")
 local HttpService = service("HttpService")
+local RunService = service("RunService")
 local Workspace = service("Workspace")
 
--- The game never sees SIA. It reads properties and polls, like Gen1's reporter: no signal
--- connections, no instances made, nothing printed, every service and object it keeps
--- passed through cloneref, and every call to the game inside pcall. Requests go through
--- the executor's own request function.
+-- The game never sees SIA: every service and object it reads or connects to goes through
+-- cloneref first, every callback and call into the game runs inside pcall, nothing is
+-- printed and no instance is made. Requests go through the executor's own request function.
 local function clone(instance)
 	return if cloneref and instance then cloneref(instance) else instance
 end
 local function localPlayer()
 	return clone(Players.LocalPlayer)
+end
+-- A connection whose callback can never raise an error into the game's output.
+local function connect(signal, fn)
+	return signal:Connect(function(...)
+		pcall(fn, ...)
+	end)
 end
 
 local httpRequest = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
@@ -212,6 +218,7 @@ function SIA.new(opts)
 	self._errors = 0
 	self._events = {}
 	self._key = { 0, 0, 0, 0, 0 }
+	self._keyAwaySince = nil
 	-- opts.request and opts.config are for tests: the executor's request function and the
 	-- server's settings, given rather than found. opts.manual skips the timers and watchers,
 	-- so a test drives _flush itself.
@@ -256,6 +263,36 @@ function SIA:_start_()
 		end
 	end
 	local cfg = self._config
+	-- Input, for idle stretches and farm detection.
+	pcall(function()
+		connect(UserInputService.InputBegan, function()
+			local now = os.clock()
+			if now - self._lastInput > 60 then
+				self._session.idle += now - self._lastInput
+			end
+			self._lastInput = now
+		end)
+		connect(UserInputService.WindowFocusReleased, function()
+			self:_viewStop()
+			if self._keyAwaySince == nil and self._key[2] == 1 and self._key[5] == 0 then
+				self._keyAwaySince = os.clock()
+			end
+		end)
+		connect(UserInputService.WindowFocused, function()
+			self._session.viewSince = os.clock()
+			if self._keyAwaySince then
+				self._key[3] += os.clock() - self._keyAwaySince
+				self._keyAwaySince = nil
+			end
+		end)
+	end)
+	pcall(function()
+		connect(localPlayer().OnTeleport, function(state)
+			if state == Enum.TeleportState.Started then
+				self:_flush(true)
+			end
+		end)
+	end)
 	self:_watchKicks()
 	self:_waitFor(tonumber(cfg.firstBatch) or 60)
 	while not self._disabled and not self._session.closed do
@@ -273,27 +310,7 @@ function SIA:_waitFor(seconds)
 		local step = math.min(left, 5)
 		task.wait(step)
 		left -= step
-		self:_sampleInput()
 	end
-end
-
--- Idle stretches, for farm detection, read by polling: the pointer and camera are compared
--- every few seconds, and a change counts as input. A minute or more without one is idle.
-function SIA:_sampleInput()
-	pcall(function()
-		local mouse = UserInputService:GetMouseLocation()
-		local camera = clone(Workspace.CurrentCamera).CFrame
-		local last = self._lastSeen
-		self._lastSeen = { mouse, camera }
-		if last and last[1] == mouse and last[2] == camera then
-			return
-		end
-		local now = os.clock()
-		if now - self._lastInput > 60 then
-			self._session.idle += now - self._lastInput
-		end
-		self._lastInput = now
-	end)
 end
 
 function SIA:_viewStop()
@@ -303,16 +320,16 @@ function SIA:_viewStop()
 	end
 end
 
--- Frame rate from how long task.wait() takes to come back, which is once a frame: up to five
--- seconds or 300 frames, with nothing connected to the game.
+-- Five seconds of frame times into two numbers: no table made per frame.
 function SIA:_sampleFrames()
 	pcall(function()
-		local frames, began = 0, os.clock()
-		while frames < 300 and os.clock() - began < 5 do
-			task.wait()
+		local frames, total = 0, 0
+		local conn = connect(RunService.RenderStepped, function(dt)
 			frames += 1
-		end
-		local total = os.clock() - began
+			total += dt
+		end)
+		task.wait(5)
+		conn:Disconnect()
 		if total > 0 then
 			self._fps = math.floor(frames / total + 0.5)
 		end
