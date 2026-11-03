@@ -25,9 +25,10 @@
 		sia:track(name)                            -- the author's own event
 		sia:disable()                              -- the player turned it off
 
-	Never sent: names, display names, typed text, labels (only a category
-	worked out here), kick messages (only a template with names and numbers
-	taken out). The Roblox user id goes over HTTPS and is turned into an
+	Never sent: player names, display names or typed text. The window title,
+	element labels and tab names go with player names, rich text and numbers
+	taken out (numbers stay in the title), and kick messages only as a
+	template. The Roblox user id goes over HTTPS and is turned into an
 	anonymous id on the server, which never stores the number.
 ]]
 
@@ -555,10 +556,16 @@ function SIA:_watchKicks()
 end
 
 -- ── Sending ─────────────────────────────────────────────────────────────────────
+-- The window's title, with player names taken out: some scripts put the player's name in it
+-- ("Speed Legends V1 | Name"), which would make it personal and split one script per player.
+function SIA:_title()
+	return withoutNames(tostring(self._script.name or ""))
+end
+
 function SIA:_fingerprint()
 	local ids = table.clone(self._order)
 	table.sort(ids)
-	return hash16(tostring(self._script.name or "") .. "|" .. table.concat(ids, ","))
+	return hash16(self:_title() .. "|" .. table.concat(ids, ","))
 end
 
 function SIA:_flush(final)
@@ -624,7 +631,7 @@ function SIA:_flush(final)
 		local body = {
 			v = FORMAT, k = self._token, s = self._run, q = self._seq, u = if userId > 0 then userId else nil,
 			g = g, x = { ex, exv }, l = self._lib,
-			c = { i = self._script.id, t = self._script.token, f = self:_fingerprint(), n = self._script.name },
+			c = { i = self._script.id, t = self._script.token, f = self:_fingerprint(), n = self:_title() },
 			d = self._device, f = if self._detail then 1 else 0,
 			e = { math.floor(now - self._start), math.floor(inView), s.minimised, s.reopened, if s.closed then 1 else 0,
 				math.floor(s.idle + (if idleNow > 60 then idleNow else 0)), if idleNow > 7200 then 1 else 0 },
