@@ -18,8 +18,6 @@ Cloudflare tells us the country the request came from. Your IP address is not st
 
 On a share of runs, chosen by our server, Rayfield also loads SIA (`sia.lua`), which counts how the window is used and sends those counts about once a minute after it opens, then every five minutes and when it closes. It sends your Roblox user ID, which our server replaces with a keyed hash before storing anything, and for each element its name, type, tab and the kind of feature it is, how often you used it and where toggles and sliders were left. Element and tab names are the script's own words, sent with rich text, player names and numbers taken out on your device. Anything you type is never sent. It also sends how long the window was open, your device type, screen size range, locale, executor, the game and its version, callback error counts and frame rate, and on a kick the error code and the message with numbers and player names removed. The full list is in the privacy policy.
 
-Some sessions also ping an uptime monitor on Sentivel (sentivel.com) every 5 minutes while Rayfield is loaded: about 1 in 200 for Rayfield's own monitor, and every session of a script whose developer set `Heartbeat` in `CreateWindow`. A ping is an empty request to the monitor's URL. Pings follow the same choice as analytics, so turning analytics off stops them.
-
 ### Turning it off
 
 If your executor can save files, open the Rayfield Settings tab in any Rayfield window and switch off **Usage analytics**. The choice is saved in `Rayfield/settings.rfld` and applies to every Rayfield script. Turning it off mid-session also stops anything already queued, such as kick reporting.
@@ -40,7 +38,7 @@ Set this before loading Rayfield to turn analytics off for everyone who runs you
 getgenv().DISABLE_RAYFIELD_REQUESTS = true
 ```
 
-It forces the setting off, stops the analytics modules being fetched, and skips the uptime pings, including the one `Heartbeat` sets up. Rayfield still downloads its icon set from GitHub.
+It forces the setting off and stops the analytics modules being fetched. Rayfield still downloads its icon set from GitHub.
 
 Remote modules are loaded from a pinned commit (`RAYFIELD_COMMIT` at the top of `source.lua`), not from a branch.
 
