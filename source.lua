@@ -43,7 +43,7 @@ end
 -- Remote modules are fetched from a fixed commit rather than a branch, so what runs is exactly what
 -- was reviewed and a push to a branch can't change it under every running script. Bump this to
 -- ship a new reporter or icon set. sirius-gate pins its reporter to the same commit.
-local RAYFIELD_COMMIT = "38826a8773fa73abe9812a77a669060685a44376" -- SiriusSoftwareLtd/Rayfield: reporter.lua, icons.lua, sia.lua
+local RAYFIELD_COMMIT = "38a84e32a7b91d873788b9da4deb020bfd87d182" -- SiriusSoftwareLtd/Rayfield: reporter.lua, icons.lua, sia.lua
 local RAYFIELD_RAW = "https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/" .. RAYFIELD_COMMIT .. "/"
 
 -- Services
@@ -137,7 +137,7 @@ local function secureNotify(wType, title, content)
 	end)
 end
 local InterfaceBuild = 'UU2NX'
-local Release = "Build 1.759"
+local Release = "Build 1.760"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
