@@ -5,8 +5,8 @@
 	SIA client core (docs/design.md, The client module).
 
 	Counts what a script's players do, in memory, and sends it in small
-	batches: one after the first minute, then every five minutes, and one
-	when the window closes or the player teleports. Nothing here may slow the
+	batches: one as the run starts, one shortly after, then every five
+	minutes, and one when the window closes or the player teleports. Nothing here may slow the
 	script or break it: every call is pcall-wrapped and never yields the
 	caller's thread, and a failed send is dropped, never retried.
 
@@ -318,6 +318,12 @@ function SIA:_start_()
 		end)
 	end)
 	self:_watchKicks()
+	-- A run counts the moment it starts (owner, 9 Nov 2026): a first, small batch goes now,
+	-- before any wait, so a player who leaves within seconds is still counted. The config can
+	-- turn it off ("start": false).
+	if cfg.start ~= false then
+		self:_flush(false)
+	end
 	self:_waitFor(tonumber(cfg.firstBatch) or 60)
 	while not self._disabled and not self._session.closed do
 		self:_sampleFrames()
