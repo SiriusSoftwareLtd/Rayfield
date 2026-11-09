@@ -318,12 +318,7 @@ function SIA:_start_()
 		end)
 	end)
 	self:_watchKicks()
-	-- A run counts the moment it starts (owner, 9 Nov 2026): a first, small batch goes now,
-	-- before any wait, so a player who leaves within seconds is still counted. The config can
-	-- turn it off ("start": false).
-	if cfg.start ~= false then
-		self:_flush(false)
-	end
+	self:_startBatch()
 	self:_waitFor(tonumber(cfg.firstBatch) or 60)
 	while not self._disabled and not self._session.closed do
 		self:_sampleFrames()
@@ -334,6 +329,15 @@ end
 
 -- Waits up to `seconds`, waking every few to stop early once the run is off or closed, so a
 -- disabled client lets go of its thread instead of sleeping out a five-minute wait.
+-- A run counts the moment it starts (owner, 9 Nov 2026): a first, small batch goes now,
+-- before any wait, so a player who leaves within seconds is still counted. The config can
+-- turn it off ("start": false).
+function SIA:_startBatch()
+	if self._config and self._config.start ~= false then
+		self:_flush(false)
+	end
+end
+
 function SIA:_waitFor(seconds)
 	local left = seconds
 	while left > 0 and not self._disabled and not self._session.closed do
