@@ -812,7 +812,7 @@ local ENV_CHECKS = {
 	{ "env_frozen", function(env) local isfrozen = env["table"]["isfrozen"] local names = { "string", "math", "table", "utf8", "bit32", "buffer", "coroutine", "os", "debug", "task" } local out = "" for i = 1, #names do local lib = env[names[i]] out = out .. ((lib and isfrozen(lib)) and "1" or "0") end return out end },
 	{ "env_members", function(env) local function has(lib, key) local l = env[lib] return (l ~= nil and l[key] ~= nil) and "1" or "0" end return has("utf8", "graphemes") .. has("utf8", "nfdnormalize") .. has("debug", "profilebegin") .. has("debug", "setmemorycategory") .. has("task", "synchronize") .. has("task", "desynchronize") .. has("table", "isfrozen") end },
 	{ "env_game", function(env) local g = env["game"] local a = (env["tostring"](g) == g["Name"]) and "1" or "0" local b = (g["Changed"] ~= g["Changed"]) and "1" or "0" local c = env["pcall"](g["GetService"], nil, "Workspace") and "1" or "0" return a .. b .. c end },
-	{ "env_api_errors", function(env) local p = env["pcall"] local new = env["Instance"]["new"] local a = p(new, nil) and "1" or "0" local b = p(new, "NotARealClassName") and "1" or "0" local c = p(env["string"]["rep"], "x", -1) and "1" or "0" return a .. b .. c end },
+	{ "env_api_errors", function(env) local p = env["pcall"] local new = env["Instance"]["new"] local a = p(new, nil) and "1" or "0" local b = p(new, "SurfaceBundleModifier") and "1" or "0" local c = p(env["string"]["rep"], "x", -1) and "1" or "0" return a .. b .. c end },
 	{ "env_recursion", function(env, h)
 	local f, d, n = h["f"], h["d"], h["n"]
 	local probe = env["loadstring"]("local info, pcall = ... local function frames() local c = 0 while c < 200 and info(c + 1, 's') ~= nil do c = c + 1 end return c end local depth, k1, k2 = 0, 0, 0 local function r(level) depth = level if level == 1 then k1 = frames() elseif level == 2 then k2 = frames() end if level >= 40000 then return level end r(level + 1) return level end local ok, e = pcall(r, 1) return depth, k1, k2, ok, e")
@@ -870,7 +870,7 @@ local ENV_CHECKS = {
 	{ "env_readonly", function(env, h)
 	local f, d, n = h["f"], h["d"], h["n"]
 	local p, tb = env["pcall"], env["table"]
-	local key = "\0forge"
+	local key = "packEdgeDelta"
 	local msgs, which = {}, ""
 	local function note(ok, e)
 	  if ok then which = which .. "0" return end
@@ -928,7 +928,7 @@ local ENV_CHECKS = {
 	{ "env_errors", function(env, h)
 	local f, d, n = h["f"], h["d"], h["n"]
 	local p = env["pcall"]
-	local none, word = nil, "forge"
+	local none, word = nil, "anchor"
 	local function msg(f) local ok, e = p(f) return ok and "none" or h["bare"](e) end
 	return msg(function() return none() end) .. "|" .. msg(function() return none["k"] end) .. "|" .. msg(function() return word + 1 end)
 	end },
